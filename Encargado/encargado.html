@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>SEAD - Encargado</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #0d6efd, #6610f2);
+            min-height: 100vh;
+        }
+        .card {
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container py-5">
+
+        <!-- HEADER -->
+    <div class="card shadow-lg p-3 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+
+            <!-- IZQUIERDA -->
+            <div class="d-flex align-items-center">
+
+                <img id="logoInstitucion"
+                    src="https://i.imgur.com/iXWxRJX.png"
+                    alt="Logo"
+                    width="50"
+                    class="me-3 rounded">
+
+                <div>
+                    <h6 id="nombreInstitucion" class="mb-0 fw-bold"></h6>
+                    <small id="nombreUsuario"></small><br>
+                    <small id="rolUsuario" class="text-muted"></small>
+                </div>
+
+            </div>
+
+            <!-- DERECHA -->
+            <button class="btn btn-danger" onclick="logout()">Salir</button>
+
+        </div>
+    </div>
+
+    <!-- AGREGAR NIE -->
+    <div class="card shadow-lg p-4 mb-4">
+        <h5 class="mb-3">Agregar alumno (Ingresar NIE)</h5>
+
+        <div class="input-group">
+            <input type="number" id="inputNie" class="form-control" placeholder="Ingrese NIE">
+            <button class="btn btn-primary" onclick="agregarNie()">Agregar</button>
+        </div>
+    </div>
+
+    <!-- TABLA -->
+    <div class="card shadow-lg p-4 mb-4">
+        <h5 class="mb-3">Alumnos</h5>
+
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>NIE</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Sección</th>
+                    <th>Opciones</th>
+                </tr>
+            </thead>
+            <tbody id="tablaAlumnos"></tbody>
+        </table>
+    </div>
+
+    <!-- BOTONES -->
+    <div class="d-flex justify-content-between">
+        <button class="btn btn-secondary" onclick="volver()">⬅ Volver</button>
+    </div>
+
+</div>
+
+<script src="../api.js"></script>   <!-- PRIMERO -->
+<script src="encargado.js"></script> <!-- DESPUÉS -->
+
+</body>
+</html>
