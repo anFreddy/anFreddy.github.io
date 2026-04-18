@@ -1,4 +1,4 @@
-const API_URL = "https://seadapi.onrender.com/api/api";
+const API_URL = "https://seadapi.onrender.com/api";
 
 // fetch base reutilizable
 async function apiFetch(endpoint, options = {}) {
