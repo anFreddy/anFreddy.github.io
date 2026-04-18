@@ -1,4 +1,4 @@
-const API_URL = "http://www.asistenciainframen.somee.com/api";
+const API_URL = "https://seadapi.onrender.com/api/api";
 
 // fetch base reutilizable
 async function apiFetch(endpoint, options = {}) {
