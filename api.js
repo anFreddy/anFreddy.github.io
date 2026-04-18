@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5041/api";
+const API_URL = "http://www.asistenciainframen.somee.com/api";
 
 // fetch base reutilizable
 async function apiFetch(endpoint, options = {}) {
