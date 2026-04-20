@@ -1,5 +1,6 @@
 // Obtener token
 const token = localStorage.getItem("token");
+
 // Decodificar usuario
 const payload = JSON.parse(atob(token.split('.')[1]));
 
@@ -15,7 +16,9 @@ if(payload.institutionLogo != ""){
 // Cargar alumnos
 async function cargarAlumnos() {
     try{
+        mostrarLoading();
         const data = await apiFetch("encargado/mis-alumnos");
+        ocultarLoading();
         const tabla = document.getElementById("tablaAlumnos");
         tabla.innerHTML = "";
 
@@ -44,6 +47,8 @@ async function cargarAlumnos() {
         });
 
     }catch (error){
+        ocultarLoading();
+        alert("Error al cargar datos, por favor intenta de nuevo");
         console.error("Error cargando alumnos:", error);
     }
 }
@@ -63,10 +68,12 @@ async function agregarNie() {
     }
 
     try {
+        mostrarLoading();
         await apiFetch("encargado/agregar-nie", {
             method: "POST",
             body: JSON.stringify({ nieID: nie })
         });
+        ocultarLoading();
 
         document.getElementById("inputNie").value = "";
         cargarAlumnos();
@@ -74,6 +81,7 @@ async function agregarNie() {
         alert("NIE agregado");
 
     } catch (error) {
+        ocultarLoading();
         alert(error.message);
     }
 }
@@ -106,7 +114,7 @@ async function eliminarNIE(alumno) {
     if (!confirmacion) return;
 
     try {
-        
+        mostrarLoading();
         await apiFetch("encargado/eliminar-nie", {
             method: "POST",
             body: JSON.stringify({
@@ -114,11 +122,12 @@ async function eliminarNIE(alumno) {
             nieID: alumno.nieID
             })
         });
-       
+        ocultarLoading();
         // o volver a cargar datos
         location.reload();
 
     } catch (error) {
+        ocultarLoading();
         console.error(error);
         alert("Error al eliminar: "+error.message);
     }

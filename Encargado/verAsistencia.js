@@ -2,14 +2,14 @@
 const token = localStorage.getItem("token");
 const alumno = JSON.parse(localStorage.getItem("alumnoSeleccionado"));
 
-// 🧠 Mostrar datos del alumno seleccionado
+// Mostrar datos del alumno seleccionado
 document.getElementById("infoAlumno").innerHTML = `
     <strong>${alumno.nombre} ${alumno.apellido}</strong><br>
     NIE: ${alumno.nieID}<br>
     Sección: ${alumno.seccion}
 `;
 
-// 🚀 Buscar asistencia
+// Buscar asistencia
 async function buscarAsistencia() {
 
     const inicio = document.getElementById("fechaInicio").value;
@@ -20,7 +20,7 @@ async function buscarAsistencia() {
         return;
     }
 
-    // 🔥 Validar rango máximo 31 días
+    // Validar rango máximo 31 días
     const fecha1 = new Date(inicio);
     const fecha2 = new Date(fin);
 
@@ -31,41 +31,50 @@ async function buscarAsistencia() {
         return;
     }
 
-    const data = await apiFetch(`encargado/verAsistencia/${alumno.nieID}?inicio=${inicio}&fin=${fin}`)
+    try {
+        mostrarLoading();
+        const data = await apiFetch(`encargado/verAsistencia/${alumno.nieID}?inicio=${inicio}&fin=${fin}`)
+        ocultarLoading();
 
-    if (!data || data.length === 0) {
-        alert("No se encontraron asistencias en el rango de fecha seleccionado")
-    }
+        if (!data || data.length === 0) {
+            alert("No se encontraron asistencias en el rango de fecha seleccionado")
+        }
 
-    const tabla = document.getElementById("tablaAsistencia");
-    tabla.innerHTML = "";
+        const tabla = document.getElementById("tablaAsistencia");
+        tabla.innerHTML = "";
 
-    const agrupado = {};
+        const agrupado = {};
 
-    data.forEach(item => {
-    if (!agrupado[item.fecha]) {
-        agrupado[item.fecha] = [];
-    }
-    agrupado[item.fecha].push(item);
-    });
+        data.forEach(item => {
+            if (!agrupado[item.fecha]) {
+                agrupado[item.fecha] = [];
+            }
+            agrupado[item.fecha].push(item);
+        });
 
-    for (const fecha in agrupado) {
-    const registros = agrupado[fecha];
+        for (const fecha in agrupado) {
+            const registros = agrupado[fecha];
 
-    const horas = registros.map(r => 
-        `<span class="badge ${r.tipoMarcacion === 'Entrada' ? 'bg-success' : 'bg-primary'} me-1">
+            const horas = registros.map(r =>
+                `<span class="badge ${r.tipoMarcacion === 'Entrada' ? 'bg-success' : 'bg-primary'} me-1">
             ${formatearHora(r.hora)} ${r.tipoMarcacion}
         </span>`
-        ).join("");
+            ).join("");
 
-    const fila = `
+            const fila = `
         <tr>
         <td>${formatearFecha(fecha)}</td>
         <td colspan="3">${horas}</td>
         </tr>
-    `;
+        `;
 
-    tabla.innerHTML += fila;
+            tabla.innerHTML += fila;
+        }
+    }
+    catch (error) {
+        ocultarLoading();
+        alert("Error al cargar datos, por favor intenta de nuevo");
+        console.error(error);
     }
 }
 

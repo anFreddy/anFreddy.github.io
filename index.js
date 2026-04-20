@@ -16,11 +16,12 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     const password = document.getElementById("loginPassword").value;
 
     try {
+        mostrarLoading();
         const data = await apiFetch("auth/login", {
             method: "POST",
             body: JSON.stringify({ email, password })
         });
-
+        ocultarLoading();
         
         // Guardar token
         localStorage.setItem("token", data.token);
@@ -42,6 +43,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
         }
 
     } catch (error) {
+        ocultarLoading();
         alert(error.message);
     }
 });
@@ -67,6 +69,7 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
     const institucionId = document.getElementById("regInstitucion").value;
 
     try {
+        mostrarLoading();
         await apiFetch("usuarios", {
             method: "POST",
             body: JSON.stringify({
@@ -76,10 +79,12 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
                 institucionId
             })
         });
+        ocultarLoading();
 
         alert("Usuario creado 🎉");
 
     } catch (error) {
+        ocultarLoading();
         alert(error.message);
     }
 });
@@ -109,8 +114,10 @@ async function cargarInstitucionPorCodigo() {
         if (!codigo) {
             document.getElementById("registerForm").style.display = "none";
         }
-
+        
+        mostrarLoading()
         const data = await apiFetch(`instituciones/codigo/${codigo}`);
+        ocultarLoading();
 
         // Mostrar Logo
         if (data.urlLogo) {
@@ -130,9 +137,9 @@ async function cargarInstitucionPorCodigo() {
         document.getElementById("tituloInstitucion").innerText = data.institucion;
 
     } catch (error) {
+        ocultarLoading();
         console.error("Error cargando institución:", error);
         document.getElementById("registerForm").style.display = "none";
-        //alert("Código inválido o institución no encontrada");
     }
 }
 
@@ -143,10 +150,12 @@ document.getElementById("forgotForm").addEventListener("submit", async (e) => {
     const email = document.getElementById("forgotEmail").value;
 
     try {
+        mostrarLoading();
         await apiFetch("auth/forgot-password", {
             method: "POST",
             body: JSON.stringify({ email })
         });
+        ocultarLoading();
 
         alert("Te enviamos un correo para recuperar tu contraseña 📧");
         
@@ -155,6 +164,7 @@ document.getElementById("forgotForm").addEventListener("submit", async (e) => {
         modal.hide();
 
     } catch (error) {
+        ocultarLoading();
         alert("Error al enviar recuperación");
     }
 });
