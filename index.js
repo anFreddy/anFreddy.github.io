@@ -114,8 +114,8 @@ async function cargarInstitucionPorCodigo() {
         if (!codigo) {
             document.getElementById("registerForm").style.display = "none";
         }
-        
-        mostrarLoading()
+        else{
+            mostrarLoading()
         const data = await apiFetch(`instituciones/codigo/${codigo}`);
         ocultarLoading();
 
@@ -135,7 +135,7 @@ async function cargarInstitucionPorCodigo() {
 
         // Cambiar título
         document.getElementById("tituloInstitucion").innerText = data.institucion;
-
+        }
     } catch (error) {
         ocultarLoading();
         console.error("Error cargando institución:", error);
