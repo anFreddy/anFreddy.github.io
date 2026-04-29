@@ -1,5 +1,11 @@
 // Obtener el token
 const token = localStorage.getItem("token");
+
+if (token == null){
+    alert("Por favor, inicia sesión.");
+    window.location.href = "../index.html";
+}
+
 const alumno = JSON.parse(localStorage.getItem("alumnoSeleccionado"));
 
 // Mostrar datos del alumno seleccionado
@@ -34,8 +40,7 @@ async function buscarAsistencia() {
     try {
         mostrarLoading();
         const data = await apiFetch(`encargado/verAsistencia/${alumno.nieID}?inicio=${inicio}&fin=${fin}`)
-        ocultarLoading();
-
+        
         if (!data || data.length === 0) {
             alert("No se encontraron asistencias en el rango de fecha seleccionado")
         }
@@ -70,38 +75,45 @@ async function buscarAsistencia() {
 
             tabla.innerHTML += fila;
         }
-    }
-    catch (error) {
+
+    } catch (error) {
+         alert(error.message);
+
+        if (error.status === 401) {
+            localStorage.removeItem("token");
+            window.location.href = "../index.html";
+            return;
+        }
+    } finally{
         ocultarLoading();
-        alert("Error al cargar datos, por favor intenta de nuevo");
-        console.error(error);
     }
 }
 
 function formatearFecha(fecha) {
-  return new Date(fecha).toLocaleDateString("es-ES", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric"
-  });
+    return new Date(fecha).toLocaleDateString("es-ES", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+    });
 }
 
 function formatearHora(hora) {
-  if (!hora) return "";
+    if (!hora) return "";
 
-  // Si viene con segundos
-  if (hora.length >= 5) {
-    return hora.substring(0, 5);
-  }
+    // Si viene con segundos
+    if (hora.length >= 5) {
+        return hora.substring(0, 5);
+    }
 
-  return hora;
+    return hora;
 }
 
-// 🔙
+// Volver
 function volver() {
     window.location.href = "encargado.html";
 }
 
+// Ejecutar cuando cargue la página
 document.addEventListener("DOMContentLoaded", () => {
     const hoy = new Date();
 

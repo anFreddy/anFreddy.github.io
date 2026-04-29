@@ -1,25 +1,30 @@
 // Obtener token
 const token = localStorage.getItem("token");
 
+if (token == null){
+    alert("Por favor, inicia sesión.");
+    window.location.href = "../index.html";
+}
+
 // Decodificar usuario
 const payload = JSON.parse(atob(token.split('.')[1]));
 
 // Mostrar datos
 document.getElementById("nombreInstitucion").innerText = payload.institutionName;
-document.getElementById("nombreUsuario").innerText = "Bienvenid@ "+payload.name;
+document.getElementById("nombreUsuario").innerText = "Bienvenid@ " + payload.name;
 document.getElementById("rolUsuario").innerText = payload.role;
 
-if(payload.institutionLogo != ""){
+if (payload.institutionLogo != "") {
     document.getElementById("logoInstitucion").src = payload.institutionLogo;
 }
 
 // Cargar alumnos
 async function cargarAlumnos() {
-    try{
+    try {
         mostrarLoading();
         const data = await apiFetch("encargado/mis-alumnos");
-        ocultarLoading();
         const tabla = document.getElementById("tablaAlumnos");
+
         tabla.innerHTML = "";
 
         data.forEach(a => {
@@ -46,43 +51,58 @@ async function cargarAlumnos() {
             `;
         });
 
-    }catch (error){
+    } catch (error) {
+        alert(error.message);
+
+        if (error.status === 401) {
+            localStorage.removeItem("token");
+            window.location.href = "../index.html";
+            return;
+        }
+
+    } finally {
         ocultarLoading();
-        alert("Error al cargar datos, por favor intenta de nuevo");
-        console.error("Error cargando alumnos:", error);
     }
 }
 
-// ➕ Agregar NIE
+// Agregar NIE
 async function agregarNie() {
     const nie = document.getElementById("inputNie").value;
 
-     if (!nie) {
+    if (!nie) {
         alert("Por favor ingrese un NIE");
         return;
     }
 
     if (nie.length > 9) {
-    alert("El NIE no puede tener más de 9 caracteres");
-    return;
+        alert("El NIE no puede tener más de 9 caracteres");
+        return;
     }
 
     try {
         mostrarLoading();
+
         await apiFetch("encargado/agregar-nie", {
             method: "POST",
             body: JSON.stringify({ nieID: nie })
         });
-        ocultarLoading();
 
-        document.getElementById("inputNie").value = "";
         cargarAlumnos();
+        document.getElementById("inputNie").value = "";
 
         alert("NIE agregado");
 
     } catch (error) {
-        ocultarLoading();
         alert(error.message);
+
+        if (error.status === 401) {
+            localStorage.removeItem("token");
+            window.location.href = "../index.html";
+            return;
+        }
+
+    } finally {
+        ocultarLoading();
     }
 }
 
@@ -92,7 +112,7 @@ function volver() {
 }
 
 function irAsistencia(alumno) {
-  if (!alumno) {
+    if (!alumno) {
         alert("Seleccione un alumno primero");
         return;
     }
@@ -118,18 +138,24 @@ async function eliminarNIE(alumno) {
         await apiFetch("encargado/eliminar-nie", {
             method: "POST",
             body: JSON.stringify({
-            id: alumno.id,
-            nieID: alumno.nieID
+                id: alumno.id,
+                nieID: alumno.nieID
             })
         });
-        ocultarLoading();
-        // o volver a cargar datos
+
+        // Volver a cargar datos
         location.reload();
 
     } catch (error) {
+        alert(error.message);
+
+        if (error.status === 401) {
+            localStorage.removeItem("token");
+            window.location.href = "../index.html";
+            return;
+        }
+    } finally {
         ocultarLoading();
-        console.error(error);
-        alert("Error al eliminar: "+error.message);
     }
 }
 
@@ -139,5 +165,7 @@ function logout() {
     window.location.href = "../index.html";
 }
 
-// Inicial
-cargarAlumnos();
+// Ejecutar cuando cargue la página
+document.addEventListener("DOMContentLoaded", () => {
+    cargarAlumnos();
+});
