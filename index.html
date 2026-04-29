@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>SEAD - Login</title>
@@ -13,148 +14,154 @@
             background: linear-gradient(135deg, #ffffff, #eceae5);
             height: 100vh;
         }
+
         .card {
             border-radius: 20px;
         }
+
         .form-control {
             border-radius: 10px;
         }
+
         .btn {
             border-radius: 10px;
         }
     </style>
 </head>
+
 <body class="d-flex justify-content-center align-items-center">
 
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
 
-            <div class="card shadow-lg p-4">
-                        
-            <div class="text-center mb-3">
-                <img id="logoInstitucion" src="https://i.imgur.com/tQZrj5T.png" alt="Logo" class="img-fluid rounded mb-2" style="max-height: 80px;">
+                <div class="card shadow-lg p-4">
 
-                <h3 class="fw-bold mb-1">SEAD</h3>
+                    <div class="text-center mb-3">
+                        <img id="logoInstitucion" src="https://i.imgur.com/tQZrj5T.png" alt="Logo"
+                            class="img-fluid rounded mb-2" style="max-height: 80px;">
 
-                <small class="text-muted d-block">
-                Sistema Estudiantil de Asistencia Digital
-                </small>
-                
-                <h3 class="text-center mb-4" id="tituloInstitucion"></h3>
-            </div>
+                        <h3 class="fw-bold mb-1">SEAD</h3>
 
-                <!-- Tabs -->
-                <ul class="nav nav-tabs mb-3" id="authTabs">
-                    <li class="nav-item">
-                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#login">
-                            Iniciar Sesión
-                        </button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#register">
-                            Registrarse
-                        </button>
-                    </li>
-                </ul>
+                        <small class="text-muted d-block">
+                            Sistema Estudiantil de Asistencia Digital
+                        </small>
 
-                <div class="tab-content">
-
-                    <!-- LOGIN -->
-                    <div class="tab-pane fade show active" id="login">
-                        <form id="loginForm">
-                            <div class="mb-3">
-                                <label>Email</label>
-                                <input type="email" class="form-control" id="loginEmail" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label>Contraseña</label>
-                                <input type="password" class="form-control" id="loginPassword" required>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary w-100">
-                                Entrar
-                            </button>
-                            
-                            <div class="text-center mt-1">
-                                <a href="#" data-bs-toggle="modal" data-bs-target="#forgotModal">
-                                    ¿Olvidaste tu contraseña?
-                                </a>
-                            </div>
-                        </form>
+                        <h3 class="text-center mb-4" id="tituloInstitucion"></h3>
                     </div>
 
-                    <!-- REGISTER -->
-                    <div class="tab-pane fade" id="register">
-                        <form id="registerForm">
-                            <div class="mb-3">
-                                <label>Nombre</label>
-                                <input type="text" class="form-control" id="regNombre" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label>Email</label>
-                                <input type="email" class="form-control" id="regEmail" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label>Contraseña</label>
-                                <input type="password" class="form-control" id="regPassword" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label>Institución</label>
-                                <input type="text" class="form-control" id="institucionNombre" readonly>
-                                <input type="hidden" id="regInstitucion">
-                            </div>
-
-                            <button type="submit" class="btn btn-success w-100">
-                                Crear cuenta
+                    <!-- Tabs -->
+                    <ul class="nav nav-tabs mb-3" id="authTabs">
+                        <li class="nav-item">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#login">
+                                Iniciar Sesión
                             </button>
-                        </form>
-                    </div>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#register">
+                                Registrarse
+                            </button>
+                        </li>
+                    </ul>
 
+                    <div class="tab-content">
+
+                        <!-- LOGIN -->
+                        <div class="tab-pane fade show active" id="login">
+                            <form id="loginForm">
+                                <div class="mb-3">
+                                    <label>Email</label>
+                                    <input type="email" class="form-control" id="loginEmail" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label>Contraseña</label>
+                                    <input type="password" class="form-control" id="loginPassword" required>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary w-100">
+                                    Entrar
+                                </button>
+
+                                <div class="text-center mt-1">
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#forgotModal">
+                                        ¿Olvidaste tu contraseña?
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- REGISTER -->
+                        <div class="tab-pane fade" id="register">
+                            <form id="registerForm">
+                                <div class="mb-3">
+                                    <label>Nombre</label>
+                                    <input type="text" class="form-control" id="regNombre" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label>Email</label>
+                                    <input type="email" class="form-control" id="regEmail" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label>Contraseña</label>
+                                    <input type="password" class="form-control" id="regPassword" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label>Institución</label>
+                                    <input type="text" class="form-control" id="institucionNombre" readonly>
+                                    <input type="hidden" id="regInstitucion">
+                                </div>
+
+                                <button type="submit" class="btn btn-success w-100">
+                                    Crear cuenta
+                                </button>
+                            </form>
+                        </div>
+
+                    </div>
                 </div>
-            </div>
 
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- MODAL OLVIDÉ CONTRASEÑA -->
-<div class="modal fade" id="forgotModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            
-            <div class="modal-header">
-                <h5 class="modal-title">Recuperar contraseña</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <!-- MODAL OLVIDÉ CONTRASEÑA -->
+    <div class="modal fade" id="forgotModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Recuperar contraseña</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <form id="forgotForm">
+                        <div class="mb-3">
+                            <label>Ingresa tu correo</label>
+                            <input type="email" class="form-control" id="forgotEmail" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-warning w-100">
+                            Enviar recuperación
+                        </button>
+                    </form>
+                </div>
+
             </div>
-
-            <div class="modal-body">
-                <form id="forgotForm">
-                    <div class="mb-3">
-                        <label>Ingresa tu correo</label>
-                        <input type="email" class="form-control" id="forgotEmail" required>
-                    </div>
-
-                    <button type="submit" class="btn btn-warning w-100">
-                        Enviar recuperación
-                    </button>
-                </form>
-            </div>
-
         </div>
     </div>
-</div>
 
-<script src="api.js"></script> 
-<script src="loading.js"></script>
-<script src="index.js"></script>
+    <script src="api.js"></script>
+    <script src="loading.js"></script>
+    <script src="index.js"></script>
 
 </body>
+
 </html>

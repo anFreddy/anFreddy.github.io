@@ -21,7 +21,6 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
             method: "POST",
             body: JSON.stringify({ email, password })
         });
-        ocultarLoading();
         
         // Guardar token
         localStorage.setItem("token", data.token);
@@ -38,13 +37,16 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
         // Redirección
         if (rol === "Encargado") {
             window.location.href = "Encargado/encargado.html";
+        } else if (rol == "Docente") {
+            window.location.href = "Docentes/dashboard_d.html";
         } else {
-            window.location.href = "dashboard.html";
+            window.location.href = "Administrador/dashboard.html";
         }
 
     } catch (error) {
-        ocultarLoading();
         alert(error.message);
+    } finally{
+        ocultarLoading();
     }
 });
 
@@ -84,8 +86,9 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
         alert("Usuario creado 🎉");
 
     } catch (error) {
-        ocultarLoading();
         alert(error.message);
+    } finally{
+        ocultarLoading();
     }
 });
 
@@ -108,38 +111,39 @@ function validarEmail(email) {
 // CARGAR INSTITUCIÓN
 async function cargarInstitucionPorCodigo() {
     try {
+        mostrarLoading()
+
         const params = new URLSearchParams(window.location.search);
         const codigo = params.get("codigo");
 
         if (!codigo) {
             document.getElementById("registerForm").style.display = "none";
         }
-        else{
-            mostrarLoading()
-        const data = await apiFetch(`instituciones/codigo/${codigo}`);
-        ocultarLoading();
+        else {
+            const data = await apiFetch(`instituciones/codigo/${codigo}`);
+            ocultarLoading();
 
-        // Mostrar Logo
-        if (data.urlLogo) {
-            document.getElementById("logoInstitucion").src = data.urlLogo;    
+            // Mostrar Logo
+            if (data.urlLogo) { document.getElementById("logoInstitucion").src = data.urlLogo; }
+
+            // Mostrar nombre
+            document.getElementById("institucionNombre").value = data.institucion;
+
+            // Ocultar este campo
+            document.getElementById("institucionNombre").parentElement.style.display = "none";
+
+            // Guardar ID oculto
+            document.getElementById("regInstitucion").value = data.id;
+
+            // Cambiar título
+            document.getElementById("tituloInstitucion").innerText = data.institucion;
         }
 
-        // Mostrar nombre
-        document.getElementById("institucionNombre").value = data.institucion;
-
-        // Ocultar este campo
-        document.getElementById("institucionNombre").parentElement.style.display = "none";
-
-        // Guardar ID oculto
-        document.getElementById("regInstitucion").value = data.id;
-
-        // Cambiar título
-        document.getElementById("tituloInstitucion").innerText = data.institucion;
-        }
     } catch (error) {
-        ocultarLoading();
-        console.error("Error cargando institución:", error);
+        alert("Error al cargar institución: "+error.message);
         document.getElementById("registerForm").style.display = "none";
+    } finally{
+        ocultarLoading();
     }
 }
 
@@ -158,16 +162,17 @@ document.getElementById("forgotForm").addEventListener("submit", async (e) => {
         ocultarLoading();
 
         alert("Te enviamos un correo para recuperar tu contraseña 📧");
-        
+
         // Cerrar modal
         const modal = bootstrap.Modal.getInstance(document.getElementById('forgotModal'));
         modal.hide();
 
     } catch (error) {
-        ocultarLoading();
         alert("Error al enviar recuperación");
+    } finally{
+        ocultarLoading();
     }
 });
 
 // Ejecutar cuando cargue la página
-document.addEventListener("DOMContentLoaded", () => {cargarInstitucionPorCodigo();});
+document.addEventListener("DOMContentLoaded", () => { cargarInstitucionPorCodigo(); });
