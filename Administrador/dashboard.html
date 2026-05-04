@@ -80,39 +80,48 @@
     <!-- NAVBAR -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-    
+
             <!-- LOGO + TEXTO -->
             <a class="navbar-brand d-flex align-items-center" href="#">
                 <img src="https://i.imgur.com/tQZrj5T.png" alt="Logo" width="40" height="40" class="me-2">
-                SEAD Sistema Estudiantil de Asistencia Digital
+                <span class="d-none d-md-inline">
+                    SEAD Sistema Estudiantil de Asistencia Digital
+                </span>
+                <span class="d-inline d-md-none">
+                    SEAD
+                </span>
             </a>
-    
+
             <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#menu">
                 <span class="navbar-toggler-icon"></span>
             </button>
-    
+
             <div class="collapse navbar-collapse" id="menu">
                 <ul class="navbar-nav ms-auto align-items-center">
-    
+
                     <li class="nav-item">
                         <a class="nav-link" href="dashboard.html">Dashboard</a>
                     </li>
-    
+
                     <li class="nav-item">
                         <a class="nav-link" href="BaseDatos/alumnos.html">Base de datos</a>
                     </li>
-    
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="Reportes/reporte.html">Reporte</a>
+                    </li>
+
                     <li class="nav-item">
                         <a class="nav-link" href="Usuarios/usuarios.html">Usuarios</a>
                     </li>
-    
+
                     <!-- BOTÓN CERRAR SESIÓN -->
                     <li class="nav-item ms-lg-3">
                         <button class="btn btn-outline-light btn-sm" onclick="cerrarSesion()">
                             Cerrar sesión
                         </button>
                     </li>
-    
+
                 </ul>
             </div>
         </div>
@@ -427,6 +436,8 @@
 
     <script src="../api.js"></script>
     <script src="../loading.js"></script>
+
+    <!-- Gráficos-->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Excel -->

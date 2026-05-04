@@ -257,6 +257,91 @@ async function eliminar(id) {
     }
 }
 
+// Exportación
+function exportarExcel() {
+
+    if(!confirm("¿Exportar a Excel?")) return;
+
+    const tabla = document.getElementById("tabla");
+
+    // Clonar la tabla
+    const tablaClon = tabla.cloneNode(true);
+
+    // ELIMINAR ÚLTIMA COLUMNA (ACCIONES)
+    
+    // 1. Quitar encabezado
+    const encabezado = tablaClon.querySelector("thead tr");
+    if (encabezado) {
+        encabezado.removeChild(encabezado.lastElementChild);
+    }
+
+    // 2. Quitar columna en cada fila
+    const filas = tablaClon.querySelectorAll("tbody tr");
+
+    if (filas === 0){
+        alert("¡No hay datos para exportar!");
+        return;
+    }
+
+    filas.forEach(fila => {
+        fila.removeChild(fila.lastElementChild);
+    });
+
+    // Exportar
+    const wb = XLSX.utils.table_to_book(tablaClon, { sheet: "Registros" });
+
+    XLSX.writeFile(wb, "SEAD_Base_de_datos.xlsx");
+}
+
+async function exportarPDF() {
+
+    if(!confirm("¿Exportar a PDF?")) return;
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.text("Base de datos", 14, 15);
+
+    // Clonar tabla completa
+    const tabla = document.getElementById("tabla");
+    const tablaClon = tabla.cloneNode(true);
+
+    // eliminar columna "Acciones"
+
+    // encabezado
+    const encabezado = tablaClon.querySelector("thead tr");
+    encabezado.removeChild(encabezado.lastElementChild);
+
+    // filas
+    const filas = tablaClon.querySelectorAll("tbody tr");
+
+    if (filas.length === 0){
+        alert("¡No hay datos para exportar!");
+        return;
+    }
+
+    filas.forEach(fila => {
+        fila.removeChild(fila.lastElementChild);
+    });
+
+    // Crear tabla limpia en el DOM (temporal)
+    const contenedor = document.createElement("div");
+    contenedor.appendChild(tablaClon);
+    document.body.appendChild(contenedor);
+
+    // generar PDF
+    doc.autoTable({
+        html: tablaClon,
+        startY: 20,
+        styles: { fontSize: 8 }
+    });
+
+    // limpiar
+    document.body.removeChild(contenedor);
+
+    doc.save("SEAD_Base_de_datos.pdf");
+}
+
 function cerrarSesion() {
     if (!confirm("¿Cerrar sesión?")) return;
 

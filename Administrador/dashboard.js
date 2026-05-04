@@ -378,6 +378,8 @@ async function verTopAlumnos() {
 // Exportación
 function exportarExcel() {
 
+    if (!confirm("¿Exportar los datos a Excel?")) return;
+
     const tabla = document.getElementById("tabla");
 
     // Clonar la tabla para no afectar la original
@@ -385,6 +387,11 @@ function exportarExcel() {
 
     // Recorrer filas
     const filas = tablaClon.querySelectorAll("tbody tr");
+
+    if (filas.length === 0){
+        alert("¡No hay datos para exportar!");
+        return;
+    }
 
     filas.forEach(fila => {
         const celdas = fila.querySelectorAll("td");
@@ -405,10 +412,20 @@ function exportarExcel() {
 
     const wb = XLSX.utils.table_to_book(tablaClon, { sheet: "Asistencia" });
 
-    XLSX.writeFile(wb, "asistencia.xlsx");
+    XLSX.writeFile(wb, "SEAD_Reporte_asistencia.xlsx");
 }
 
 async function exportarPDF() {
+
+    if (!confirm("¿Exportar los datos a PDF?")) return;
+
+    const filas = document.querySelectorAll("#tabla tbody tr");
+
+        if (filas.length === 0) {
+            alert("¡No hay datos para exportar!");
+            return;
+        }
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
@@ -423,7 +440,7 @@ async function exportarPDF() {
         styles: { fontSize: 8 }
     });
 
-    doc.save("asistencia.pdf");
+    doc.save("SEAD_Reporte_asistencia.pdf");
 }
 
 function cerrarSesion() {
@@ -439,3 +456,4 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarSecciones();
     renderGrafico(0, 0);
 });
+

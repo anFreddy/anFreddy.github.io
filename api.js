@@ -1,4 +1,4 @@
-const API_URL = "https://seadapi.onrender.com/api";
+const API_URL = "http://localhost:5000/api";
 
 async function apiFetch(endpoint, options = {}) {
     const loader = document.getElementById("loader");

@@ -378,6 +378,8 @@ async function verTopAlumnos() {
 // Exportación
 function exportarExcel() {
 
+    if (!confirm("¿Exportar a Excel?")) return;
+
     const tabla = document.getElementById("tabla");
 
     // Clonar la tabla para no afectar la original
@@ -385,6 +387,11 @@ function exportarExcel() {
 
     // Recorrer filas
     const filas = tablaClon.querySelectorAll("tbody tr");
+
+    if (filas.length === 0) {
+        alert("¡No hay datos para exportar!");
+        return;
+    }
 
     filas.forEach(fila => {
         const celdas = fila.querySelectorAll("td");
@@ -409,6 +416,17 @@ function exportarExcel() {
 }
 
 async function exportarPDF() {
+
+    if (!confirm("¿Exportar a PDF?")) return;
+
+    const filas = document.querySelectorAll("#tabla tbody tr");
+
+    if (filas.length === 0) {
+        alert("¡No hay datos para exportar!");
+        return;
+    }
+
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
