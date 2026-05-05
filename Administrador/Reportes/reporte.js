@@ -53,6 +53,7 @@ async function obtenerAsistencias() {
         mostrarLoading();
 
         const seccion = document.getElementById("seccion").value;
+        const lbSeccion = document.getElementById("lbSeccion");
 
         if (seccion === '') {
             alert("Sección inválida")
@@ -62,9 +63,11 @@ async function obtenerAsistencias() {
         const fechaDesde = document.getElementById("fechaInicio").value;
         const fechaHasta = document.getElementById("fechaFin").value;
 
-        const data = await apiFetch(`alumnos/asistencia-periodo?seccion=${seccion}&fechaDesde=${fechaDesde}&fechaHasta=${fechaHasta}`)
+        const data = await apiFetch(`alumnos/asistencia-periodo?seccion=${seccion}&fechaDesde=${fechaDesde}&fechaHasta=${fechaHasta}`);
 
-        renderTabla(data);
+        lbSeccion.innerText = seccion;
+               
+        renderTabla(data, seccion);
 
     } catch (error) {
         alert(error.message);
@@ -79,7 +82,7 @@ async function obtenerAsistencias() {
     }
 }
 
-function renderTabla(data) {
+async function renderTabla(data, seccion) {
     const tbody = document.getElementById("tablaReporte");
     const thead = document.getElementById("tablaReporteHead")
 
@@ -88,13 +91,8 @@ function renderTabla(data) {
         return;
     }
 
-    const alumnosUnicos = Array.from(
-        new Map(data
-            .filter(a => a.nie) // primero asegurar que tenga NIE
-            .map(a => [a.nie, a])
-        ).values()
-    );
-
+    const alumnosUnicos = await apiFetch(`alumnos/lista-seccion/${encodeURIComponent(seccion)}`);
+    
     const fechasUnicas = [...new Set(data.map(a => a.fecha))]
         .sort((a, b) => new Date(a) - new Date(b));
 
@@ -105,7 +103,6 @@ function renderTabla(data) {
        <th>NIE</th>
        <th>Apellido</th>
        <th>Nombre</th>
-       <th>Sección</th>
     `;
     fechasUnicas.forEach(f => {
         html += `
@@ -124,15 +121,14 @@ function renderTabla(data) {
     alumnosUnicos.forEach(a => {
         contador = 0;
         html += `<tr>
-        <td>${a.nie}</td>
+        <td>${a.nieId}</td>
         <td>${a.apellido}</td>
         <td>${a.nombre}</td>
-        <td>${a.seccion}</td>
     `;
 
         fechasUnicas.forEach(f => {
             const registro = data.find(d =>
-                d.nie === a.nie && d.fecha === f
+                d.nie === a.nieId && d.fecha === f
             );
             if (registro)
                 contador++;
@@ -160,11 +156,8 @@ function formatearFechaCorta(fecha) {
 }
 
 function formatearFecha(fecha) {
-    return new Date(fecha).toLocaleDateString("es-ES", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric"
-    });
+    const [year, month, day] = fecha.split(/[-\/]/);
+    return `${day}/${month}/${year}`;
 }
 
 function formatearHora(hora) {
@@ -208,12 +201,43 @@ function exportarExcel() {
         data.push(fila);
     });
 
-    // 🔹 Crear hoja
-    const ws = XLSX.utils.json_to_sheet(data);
+    // 🔹 Crear hoja vacía
+    const ws = XLSX.utils.aoa_to_sheet([]);
 
-    // 🔥 NEGRITAS EN ENCABEZADOS
+    // 🔹 Crear título
+    const seccion = document.getElementById("seccion")?.value || "";
+    const fechaDesde = document.getElementById("fechaInicio").value;
+    const fechaHasta = document.getElementById("fechaFin").value;
+    const titulo = `Reporte de la sección ${seccion} Desde ${formatearFecha(fechaDesde)} Hasta ${formatearFecha(fechaHasta)}`;
+
+    // 🔹 Insertar título (fila 1)
+    XLSX.utils.sheet_add_aoa(ws, [[titulo]], { origin: "A1" });
+
+    // 🔹 Insertar encabezados (fila 2)
+    XLSX.utils.sheet_add_aoa(ws, [headers], { origin: "A2" });
+
+    // 🔹 Insertar datos (desde fila 3)
+    XLSX.utils.sheet_add_json(ws, data, {
+        origin: "A3",
+        skipHeader: true
+    });
+
+    // 🔥 Combinar celdas del título
+    ws["!merges"] = [{
+        s: { r: 0, c: 0 },
+        e: { r: 0, c: headers.length - 1 }
+    }];
+
+    // 🔥 Estilo del título
+    const tituloCell = XLSX.utils.encode_cell({ r: 0, c: 0 });
+    ws[tituloCell].s = {
+        font: { bold: true, sz: 14 },
+        alignment: { horizontal: "center" }
+    };
+
+    // 🔥 Negrita en encabezados (fila 2)
     headers.forEach((_, i) => {
-        const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
+        const cellRef = XLSX.utils.encode_cell({ r: 1, c: i });
         if (!ws[cellRef]) return;
 
         ws[cellRef].s = {
@@ -221,8 +245,8 @@ function exportarExcel() {
         };
     });
 
-    // 📏 AUTO AJUSTE DE COLUMNAS
-    const colWidths = headers.map((header, i) => {
+    // 📏 Auto ajuste de columnas
+    const colWidths = headers.map((header) => {
         let maxLength = header.length;
 
         data.forEach(row => {
@@ -230,7 +254,7 @@ function exportarExcel() {
             maxLength = Math.max(maxLength, value.length);
         });
 
-        return { wch: maxLength + 2 }; // +2 padding
+        return { wch: maxLength + 2 };
     });
 
     ws["!cols"] = colWidths;
@@ -256,7 +280,10 @@ async function exportarPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
-    doc.text("Reporte", 14, 15);
+    const seccion = document.getElementById("seccion")?.value || "";
+    const fechaDesde = document.getElementById("fechaInicio").value;
+    const fechaHasta = document.getElementById("fechaFin").value;
+    doc.text(`Reporte de la sección ${seccion}\nDesde ${formatearFecha(fechaDesde)} Hasta ${formatearFecha(fechaHasta)}`, 14, 15);
 
     // Clonar tabla completa
     const tabla = document.getElementById("tabla");
@@ -270,7 +297,7 @@ async function exportarPDF() {
     // generar PDF
     doc.autoTable({
         html: tablaClon,
-        startY: 20,
+        startY: 25,
         styles: { fontSize: 8 }
     });
 

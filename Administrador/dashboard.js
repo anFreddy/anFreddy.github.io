@@ -375,7 +375,11 @@ async function verTopAlumnos() {
     }
 }
 
-// Exportación
+function formatearFecha(fecha) {
+    const [year, month, day] = fecha.split(/[-\/]/);
+    return `${day}/${month}/${year}`;
+}
+
 function exportarExcel() {
 
     if (!confirm("¿Exportar los datos a Excel?")) return;
@@ -385,7 +389,6 @@ function exportarExcel() {
     // Clonar la tabla para no afectar la original
     const tablaClon = tabla.cloneNode(true);
 
-    // Recorrer filas
     const filas = tablaClon.querySelectorAll("tbody tr");
 
     if (filas.length === 0){
@@ -393,25 +396,70 @@ function exportarExcel() {
         return;
     }
 
+    // 🔹 Convertir badges a texto
     filas.forEach(fila => {
         const celdas = fila.querySelectorAll("td");
-
-        // Asumiendo que "Detalles" es la última columna
         const detalles = celdas[celdas.length - 1];
-
         const badges = detalles.querySelectorAll("span");
 
         let texto = [];
-
         badges.forEach(b => {
-            texto.push(b.textContent.trim() || "00:00");
+            texto.push(b.textContent.trim());
         });
 
-        detalles.innerHTML = texto.join(" | ");
+        detalles.innerHTML = texto.join("   ");
     });
 
+    // Obtener datos
+    const seccion = document.getElementById("lbAsistenciaSeccion").innerText;
+    const fecha = document.getElementById("fecha").value;
+    const presentes = document.getElementById("total").innerText;
+    const ausentes = document.getElementById("diferencia").innerText;
+    const total = document.getElementById("totalAlumnos").innerText;
+    
+    // 🔹 Agregar título
+    const titulo = `Reporte de asistencia ${seccion} Presentes ${presentes} Ausentes ${ausentes} Total ${total}`;
+
+    const thead = tablaClon.querySelector("thead");
+    const filaTitulo = document.createElement("tr");
+    const thTitulo = document.createElement("th");
+
+    const totalCols = thead.querySelectorAll("th").length;
+    thTitulo.colSpan = totalCols;
+    thTitulo.textContent = titulo;
+    thTitulo.style.textAlign = "center";
+    thTitulo.style.fontWeight = "bold";
+
+    filaTitulo.appendChild(thTitulo);
+    thead.insertBefore(filaTitulo, thead.firstChild);
+
+    // 🔹 Crear workbook
     const wb = XLSX.utils.table_to_book(tablaClon, { sheet: "Asistencia" });
 
+    // 🔹 Obtener worksheet
+    const ws = wb.Sheets["Asistencia"];
+
+    // 🔥 AUTO AJUSTE DE COLUMNAS
+    const colWidths = [];
+
+    const todasFilas = tablaClon.querySelectorAll("tr");
+
+    todasFilas.forEach(tr => {
+
+        const esTitulo = tr.querySelector("th")?.colSpan > 1;
+        if (esTitulo) return;
+
+        tr.querySelectorAll("th, td").forEach((celda, i) => {
+            const texto = celda.innerText || "";
+            const largo = texto.length;
+
+            colWidths[i] = Math.max(colWidths[i] || 10, largo + 2);
+        });
+    });
+
+    ws["!cols"] = colWidths.map(w => ({ wch: w }));
+
+    // 📥 Exportar
     XLSX.writeFile(wb, "SEAD_Reporte_asistencia.xlsx");
 }
 
@@ -429,14 +477,18 @@ async function exportarPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
+    // Obtener datos
     const seccion = document.getElementById("lbAsistenciaSeccion").innerText;
     const fecha = document.getElementById("fecha").value;
+    const presentes = document.getElementById("total").innerText;
+    const ausentes = document.getElementById("diferencia").innerText;
+    const total = document.getElementById("totalAlumnos").innerText;
 
-    doc.text("Reporte de Asistencia: " + seccion + " " + fecha, 14, 15);
+    doc.text(`Reporte de asistencia ${seccion}\nPresentes ${presentes} Ausentes ${ausentes} Total ${total} Fecha ${formatearFecha(fecha)}`, 14, 15);
 
     doc.autoTable({
         html: "#tabla",
-        startY: 20,
+        startY: 25,
         styles: { fontSize: 8 }
     });
 

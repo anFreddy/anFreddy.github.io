@@ -163,25 +163,28 @@
                     </div>
 
                     <!-- Rol -->
-                    <div class="mb-3">
-                        <label class="form-label">Rol</label>
-                        <select id="rol" class="form-select" required>
-                            <option value="">Seleccione un rol</option>
-                        </select>
-                        <div class="invalid-feedback">La sección es obligatoria</div>
-                    </div>
-
-                    <!-- Secciones (solo Docente) -->
-                    <div class="mb-3 d-none" id="contenedorSecciones">
-                        <label class="form-label">Secciones asignadas</label>
-
-                        <div id="listaSecciones" class="border rounded p-2" style="max-height: 200px; overflow-y:auto;">
-                            <!-- Aquí se llenarán dinámicamente -->
+                    <div class="d-done" id="dropRoles">
+                        <div class="mb-3">
+                            <label class="form-label">Rol</label>
+                            <select id="rol" class="form-select" required>
+                                <option value="">Seleccione un rol</option>
+                            </select>
+                            <div class="invalid-feedback">La sección es obligatoria</div>
                         </div>
-
-                        <div class="form-text">Selecciona las secciones que podrá ver</div>
+                    
+                        <!-- Secciones (solo Docente) -->
+                        <div class="mb-3 d-none" id="contenedorSecciones">
+                            <label class="form-label">Secciones asignadas</label>
+                    
+                            <div id="listaSecciones" class="border rounded p-2" style="max-height: 200px; overflow-y:auto;">
+                                <!-- Aquí se llenarán dinámicamente -->
+                            </div>
+                    
+                            <div class="form-text">Selecciona las secciones que podrá ver</div>
+                        </div>
                     </div>
-                </div>
+                    </div>
+
 
                 <div class="modal-footer">
                     <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>

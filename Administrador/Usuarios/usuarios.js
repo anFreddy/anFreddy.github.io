@@ -96,7 +96,16 @@ async function cargarRoles() {
     try {
         const roles = await apiFetch("usuarios/listaRoles")
 
+        // Buscar el rol por defecto
+        const rolDefault = roles.find(r => r.esPorDefecto || r.EsPorDefecto);
+
+        // Guardarlo en localStorage
+        if (rolDefault) {
+            localStorage.setItem("rolDefault", rolDefault.id);
+        }
+        
         const selectFiltro = document.getElementById("rol");
+
         roles.forEach(rol => {
             const option = document.createElement("option");
             option.value = rol.id;
@@ -115,6 +124,7 @@ async function cargarRoles() {
 }
 
 function abrirModal() {
+    document.getElementById("id").value = "";
     document.getElementById("nombre").value = "";
     document.getElementById("email").value = "";
     document.getElementById("rol").value = "";
@@ -172,13 +182,26 @@ function manejarCambioRol() {
     const select = document.getElementById("rol");
     const selectedOption = select.options[select.selectedIndex];
     const nombreRol = selectedOption.text.trim();
-    const usuarioId = document.getElementById("id").value;
+    const usuarioId = document.getElementById("id").value || 0;
 
     const contenedor = document.getElementById("contenedorSecciones");
+    const dropRoles = document.getElementById("dropRoles");
+
+    if (usuarioId === 0){
+        dropRoles.classList.add("d-none");
+        const rolGuardado = localStorage.getItem("rolDefault");
+
+        if (rolGuardado) {
+            select.value = rolGuardado;
+        }
+    }
+    else{
+        dropRoles.classList.remove("d-none");
+    }
+         
 
     if (nombreRol === "Docente") {
         contenedor.classList.remove("d-none");
-        //cargarSecciones();
         cargarSeccionesRol(usuarioId);
         
     } else {
@@ -269,16 +292,25 @@ async function guardarUsuario() {
             id: parseInt(document.getElementById("id").value) || 0,
             nombre: document.getElementById("nombre").value.trim(),
             email: document.getElementById("email").value.trim(),
-            rol: document.getElementById("rol").value,
-            rolId: document.getElementById("rol").value.trim(),
+            rol: document.getElementById("rol").value || "",
+            rolId: document.getElementById("rol").value.trim() || "",
 
             seccionesIds: obtenerSeccionesSeleccionadas() // Obtener secciones para rol Docente
         };
 
-        if (usuario.id) {
+        if (usuario.id > 0) {
             await apiFetch("usuarios/editar", {
                 method: "PUT",
                 body: JSON.stringify(usuario)
+            });
+            // Guardar las secciones permitidas
+            await apiFetch("usuarios/asignar-secciones", {
+                method: "POST",
+                body: JSON.stringify({
+                    rolId: usuario.rolId,
+                    usuarioId: usuario.id,
+                    seccionesIds: usuario.seccionesIds
+                })
             });
         } else {
             await apiFetch("usuarios/nuevo", {
@@ -286,17 +318,7 @@ async function guardarUsuario() {
                 body: JSON.stringify(usuario)
             });
         }
-        
-        // Guardar las secciones permitidas
-        await apiFetch("usuarios/asignar-secciones", {
-            method: "POST",
-            body: JSON.stringify({
-                rolId: usuario.rolId,
-                usuarioId: usuario.id,
-                seccionesIds: usuario.seccionesIds
-            })
-        });
-        
+                
         modal.hide();
         cargarUsuarios();
 
