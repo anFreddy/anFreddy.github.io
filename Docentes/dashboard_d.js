@@ -79,11 +79,10 @@ async function cargarSecciones() {
 
 // Cargar asistencia
 async function cargarAsistencia() {
-    const fecha = document.getElementById("fecha").value;
-    // Obtener sección
-    const select = document.getElementById("seccion");
-    const seccion = select.options[select.selectedIndex].text;
 
+    const fecha = document.getElementById("fecha").value;
+    const seccion = document.getElementById("seccion").value;
+    
     try {
         mostrarLoading();
         const asistencia = await apiFetch(`docentes/asistenciaTotal?fecha=${fecha}&seccion=${seccion}`)
@@ -330,8 +329,7 @@ filtroMes.addEventListener("change", () => {
 
 async function verTopAlumnos() {
 
-    const select = document.getElementById("seccionModal");
-    const seccion = select.options[select.selectedIndex].text;
+    const seccion = document.getElementById("seccionModal").value;
     let mesActual = document.getElementById("selectMes").value;
     const añoActual = new Date().getFullYear();
 

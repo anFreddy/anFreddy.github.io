@@ -9,6 +9,7 @@ if (token == null) {
 // Cargar secciones
 async function cargarSecciones() {
     try {
+        mostrarLoading();
         const secciones = await apiFetch("alumnos/secciones");
 
         llenarSelect("seccion", secciones);
@@ -20,6 +21,8 @@ async function cargarSecciones() {
             localStorage.removeItem("token");
             window.location.href = "../../index.html";
         }
+    } finally{
+        ocultarLoading();
     }
 }
 
@@ -64,6 +67,11 @@ async function obtenerAsistencias() {
         const fechaHasta = document.getElementById("fechaFin").value;
 
         const data = await apiFetch(`alumnos/asistencia-periodo?seccion=${seccion}&fechaDesde=${fechaDesde}&fechaHasta=${fechaHasta}`);
+
+        if (data.length === 0){
+            alert("No se encontraron registros en el rango de fechas seleccionado");
+            return;
+        }
 
         lbSeccion.innerText = seccion;
                

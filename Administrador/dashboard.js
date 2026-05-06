@@ -51,7 +51,7 @@ async function cargarSecciones() {
         const select = document.getElementById("seccion");
         secciones.forEach(sec => {
             const option = document.createElement("option");
-            option.value = sec.id;
+            option.value = sec.nombre;
             option.textContent = sec.nombre;
             select.appendChild(option);
         });
@@ -59,7 +59,7 @@ async function cargarSecciones() {
         const selectModal = document.getElementById("seccionModal");
         secciones.forEach(sec => {
             const option = document.createElement("option");
-            option.value = sec.id;
+            option.value = sec.nombre;
             option.textContent = sec.nombre;
             selectModal.appendChild(option);
         });
@@ -80,10 +80,8 @@ async function cargarSecciones() {
 // Cargar asistencia
 async function cargarAsistencia() {
     const fecha = document.getElementById("fecha").value;
-    // Obtener sección
-    const select = document.getElementById("seccion");
-    const seccion = select.options[select.selectedIndex].text;
-
+    const seccion = document.getElementById("seccion").value;
+    
     try {
         mostrarLoading();
         const asistencia = await apiFetch(`alumnos/asistenciaTotal?fecha=${fecha}&seccion=${seccion}`)
@@ -330,8 +328,7 @@ filtroMes.addEventListener("change", () => {
 
 async function verTopAlumnos() {
 
-    const select = document.getElementById("seccionModal");
-    const seccion = select.options[select.selectedIndex].text;
+    const seccion = document.getElementById("seccionModal").value;
     let mesActual = document.getElementById("selectMes").value;
     const añoActual = new Date().getFullYear();
 
