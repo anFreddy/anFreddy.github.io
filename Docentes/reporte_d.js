@@ -303,41 +303,148 @@ function exportarExcel() {
 async function exportarPDF() {
 
     if (!confirm("¿Exportar a PDF?")) return;
+
     const filas = document.querySelectorAll("#tabla tbody tr");
 
     if (filas.length === 0) {
+
         alert("¡No hay datos para exportar!");
         return;
     }
 
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
 
-    const seccion = document.getElementById("seccion")?.value || "";
-    const fechaDesde = document.getElementById("fechaInicio").value;
-    const fechaHasta = document.getElementById("fechaFin").value;
-    doc.text(`Reporte de la sección ${seccion}\nDesde ${formatearFecha(fechaDesde)} Hasta ${formatearFecha(fechaHasta)}`, 14, 15);
+    // 🔹 PDF horizontal
+    const doc = new jsPDF({
+        orientation: "landscape",
+        unit: "mm",
+        format: "letter"
+    });
 
-    // Clonar tabla completa
-    const tabla = document.getElementById("tabla");
-    const tablaClon = tabla.cloneNode(true);
+    // =========================================================
+    // 🔹 DATOS DEL REPORTE
+    // =========================================================
 
-    // Crear tabla limpia en el DOM (temporal)
+    const seccion =
+        document.getElementById("seccion")?.value || "";
+
+    const fechaDesde =
+        document.getElementById("fechaInicio").value;
+
+    const fechaHasta =
+        document.getElementById("fechaFin").value;
+
+    // =========================================================
+    // 🔹 TÍTULO
+    // =========================================================
+
+    doc.setFontSize(14);
+    doc.text(`Reporte de la sección ${seccion}`, 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Desde ${formatearFecha(fechaDesde)} Hasta ${formatearFecha(fechaHasta)}`, 14, 22);
+
+    // =========================================================
+    // 🔹 CLONAR TABLA
+    // =========================================================
+
+    const tabla =
+        document.getElementById("tabla");
+
+    const tablaClon =
+        tabla.cloneNode(true);
+
+    // 🔹 Necesario para leer spans
     const contenedor = document.createElement("div");
+    contenedor.style.position = "absolute";
+    contenedor.style.left = "-9999px";
     contenedor.appendChild(tablaClon);
     document.body.appendChild(contenedor);
 
-    // generar PDF
+    // =========================================================
+    // 🔹 GENERAR TABLA PDF
+    // =========================================================
+
     doc.autoTable({
         html: tablaClon,
-        startY: 25,
-        styles: { fontSize: 8 }
+        startY: 30,
+        theme: "grid",
+
+        styles: {
+            fontSize: 7,
+            cellPadding: 2,
+            overflow: "linebreak",
+            halign: "center",
+            valign: "middle"
+        },
+
+        // 🔹 Header azul
+        headStyles: {
+            fillColor: [13, 110, 253],
+            textColor: [255, 255, 255],
+            fontStyle: "bold"
+        },
+
+        // 🔹 Filas alternas
+        alternateRowStyles: {
+            fillColor: [248, 249, 250]
+        },
+
+        // =====================================================
+        // 🔹 CONVERTIR BADGES A TEXTO
+        // =====================================================
+
+        didParseCell: function (data) {
+
+            // Solo body
+            if (data.section !== "body") return;
+            const td = data.cell.raw;
+            if (!td) return;
+
+            const badges = td.querySelectorAll("span");
+
+            if (badges.length === 0) return;
+
+            // 🔹 Obtener valores
+            const entrada = badges[0]?.innerText.trim() || "";
+            const salida = badges[1]?.innerText.trim() || "";
+            const total = badges[2]?.innerText.trim() || "";
+
+            // 🔹 Construir texto
+            let texto = "";
+
+            if (entrada)
+                texto += entrada;
+
+            if (salida)
+                texto += ` | ${salida}`;
+
+            if (total)
+                texto += ` = ${total}`;
+
+            // 🔹 Reemplazar contenido
+            data.cell.text = [texto];
+
+            // 🔹 Estilo texto
+            data.cell.styles.fontStyle =
+                "bold";
+
+            data.cell.styles.textColor = [33, 37, 41];
+        }
     });
 
-    // limpiar
+    // =========================================================
+    // 🔹 LIMPIAR DOM
+    // =========================================================
+
     document.body.removeChild(contenedor);
 
-    doc.save("SEAD_Reporte.pdf");
+    // =========================================================
+    // 🔹 EXPORTAR
+    // =========================================================
+
+    doc.save(
+        "SEAD_Reporte_Horas_Acumuladas.pdf"
+    );
 }
 
 function cerrarSesion() {

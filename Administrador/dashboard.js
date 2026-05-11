@@ -472,7 +472,12 @@ async function exportarPDF() {
         }
 
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+        // 🔹 PDF vertical
+    const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "letter"
+    });
 
     // Obtener datos
     const seccion = document.getElementById("lbAsistenciaSeccion").innerText;
@@ -480,16 +485,118 @@ async function exportarPDF() {
     const presentes = document.getElementById("total").innerText;
     const ausentes = document.getElementById("diferencia").innerText;
     const total = document.getElementById("totalAlumnos").innerText;
+    
+    doc.setFontSize(14);
+    doc.text(`Reporte de asistencia ${seccion}`,14,15);
+    doc.setFontSize(10);
+    doc.text(`Presentes ${presentes} Ausentes ${ausentes} Total ${total} Fecha ${formatearFecha(fecha)}`, 14, 22);
 
-    doc.text(`Reporte de asistencia ${seccion}\nPresentes ${presentes} Ausentes ${ausentes} Total ${total} Fecha ${formatearFecha(fecha)}`, 14, 15);
+        // =========================================================
+    // 🔹 CLONAR TABLA
+    // =========================================================
+
+    const tabla =
+        document.getElementById("tabla");
+
+    const tablaClon =
+        tabla.cloneNode(true);
+
+    // 🔹 Necesario para leer spans
+    const contenedor = document.createElement("div");
+    contenedor.style.position = "absolute";
+    contenedor.style.left = "-9999px";
+    contenedor.appendChild(tablaClon);
+    document.body.appendChild(contenedor);
+
+    // =========================================================
+    // 🔹 GENERAR TABLA PDF
+    // =========================================================
 
     doc.autoTable({
-        html: "#tabla",
-        startY: 25,
-        styles: { fontSize: 8 }
+        html: tablaClon,
+        startY: 30,
+        theme: "grid",
+
+        styles: {
+            fontSize: 7,
+            cellPadding: 2,
+            overflow: "linebreak",
+            halign: "center",
+            valign: "middle"
+        },
+
+        // 🔹 Header azul
+        headStyles: {
+            fillColor: [13, 110, 253],
+            textColor: [255, 255, 255],
+            fontStyle: "bold"
+        },
+
+        // 🔹 Filas alternas
+        alternateRowStyles: {
+            fillColor: [248, 249, 250]
+        },
+
+        // =====================================================
+        // 🔹 CONVERTIR BADGES A TEXTO
+        // =====================================================
+
+        didParseCell: function (data) {
+
+            // Solo body
+            if (data.section !== "body") return;
+            const td = data.cell.raw;
+            if (!td) return;
+
+            const badges = td.querySelectorAll("span");
+
+            if (badges.length === 0) return;
+
+            // 🔹 Obtener valores
+            const entrada = badges[0]?.innerText.trim() || "";
+            const salida = badges[1]?.innerText.trim() || "";
+            const entrada2 = badges[3]?.innerText.trim() || "";
+            const salida2 = badges[4]?.innerText.trim() || "";
+
+            // 🔹 Construir texto
+            let texto = "";
+
+            if (entrada)
+                texto += entrada;
+
+            if (salida)
+                texto += ` | ${salida}`;
+
+            if (entrada2)
+                texto += ` | ${entrada2}`;
+
+            if (salida2)
+                texto += ` | ${salida2}`;
+
+            // 🔹 Reemplazar contenido
+            data.cell.text = [texto];
+
+            // 🔹 Estilo texto
+            data.cell.styles.fontStyle =
+                "bold";
+
+            data.cell.styles.textColor = [33, 37, 41];
+        }
     });
 
-    doc.save("SEAD_Reporte_asistencia.pdf");
+    // =========================================================
+    // 🔹 LIMPIAR DOM
+    // =========================================================
+
+    document.body.removeChild(contenedor);
+
+    // =========================================================
+    // 🔹 EXPORTAR
+    // =========================================================
+
+    doc.save(
+        "SEAD_Reporte_asistencia.pdf"
+    );
 }
 
 function cerrarSesion() {
