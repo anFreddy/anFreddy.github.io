@@ -31,7 +31,7 @@ async function apiFetch(endpoint, options = {}) {
                 mensaje = text;
             }
 
-            // 🔥 AQUÍ EL CAMBIO IMPORTANTE
+            // AQUÍ EL CAMBIO IMPORTANTE
             const err = new Error(mensaje || "Error en el servidor");
             err.status = res.status;
 
