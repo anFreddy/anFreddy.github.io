@@ -66,6 +66,17 @@ async function obtenerAsistencias() {
         const fechaDesde = document.getElementById("fechaInicio").value;
         const fechaHasta = document.getElementById("fechaFin").value;
 
+        // Validar rango máximo 31 días
+        const fecha1 = new Date(fechaDesde);
+        const fecha2 = new Date(fechaHasta);
+
+        const diff = (fecha2 - fecha1) / (1000 * 60 * 60 * 24);
+
+        if (diff > 31) {
+            alert("El rango no puede ser mayor a 31 días");
+            return;
+        }
+
         const data = await apiFetch(`alumnos/asistencia-periodo?seccion=${seccion}&fechaDesde=${fechaDesde}&fechaHasta=${fechaHasta}`);
 
         if (data.length === 0){

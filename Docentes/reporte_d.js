@@ -66,6 +66,17 @@ async function obtenerAsistencias() {
         const fechaDesde = document.getElementById("fechaInicio").value;
         const fechaHasta = document.getElementById("fechaFin").value;
 
+        // Validar rango máximo 31 días
+        const fecha1 = new Date(fechaDesde);
+        const fecha2 = new Date(fechaHasta);
+
+        const diff = (fecha2 - fecha1) / (1000 * 60 * 60 * 24);
+
+        if (diff > 31) {
+            alert("El rango no puede ser mayor a 31 días");
+            return;
+        }
+
         const data = await apiFetch(`alumnos/asistencia-periodo?seccion=${seccion}&fechaDesde=${fechaDesde}&fechaHasta=${fechaHasta}`)
 
         if (data.length === 0) {
@@ -88,6 +99,20 @@ async function obtenerAsistencias() {
     } finally {
         ocultarLoading();
     }
+}
+
+function crearBadge(valor, clase) {
+    if (!valor || valor === "" || valor === null) {
+        return `<span style="
+    min-width: 60px;
+    height: 22px;
+    display: inline-block;
+    border-radius: 6px;
+    background-color: #e9ecef;
+    "></span>`;
+    }
+    return `<span class="badge ${clase}" style="min-width: 60px; display: inline-block; text-align: center;">
+    ${valor}</span>`;
 }
 
 async function renderTabla(data, seccion) {
@@ -141,7 +166,7 @@ async function renderTabla(data, seccion) {
             if (registro)
                 contador++;
             html += `<td>
-            ${registro ? formatearHora(registro.hora) : "-"}
+            ${crearBadge(registro ? formatearHora(registro.hora) : "", "badge-green")}
         </td>`;
         });
 
