@@ -373,44 +373,93 @@ async function verTopAlumnos() {
     }
 }
 
+function formatearFecha(fecha) {
+    const [year, month, day] = fecha.split(/[-\/]/);
+    return `${day}/${month}/${year}`;
+}
+
 // Exportación
 function exportarExcel() {
 
-    if (!confirm("¿Exportar a Excel?")) return;
+    if (!confirm("¿Exportar los datos a Excel?")) return;
 
     const tabla = document.getElementById("tabla");
 
     // Clonar la tabla para no afectar la original
     const tablaClon = tabla.cloneNode(true);
 
-    // Recorrer filas
     const filas = tablaClon.querySelectorAll("tbody tr");
 
-    if (filas.length === 0) {
+    if (filas.length === 0){
         alert("¡No hay datos para exportar!");
         return;
     }
 
+    // 🔹 Convertir badges a texto
     filas.forEach(fila => {
         const celdas = fila.querySelectorAll("td");
-
-        // Asumiendo que "Detalles" es la última columna
         const detalles = celdas[celdas.length - 1];
-
         const badges = detalles.querySelectorAll("span");
 
         let texto = [];
-
         badges.forEach(b => {
-            texto.push(b.textContent.trim() || "00:00");
+            texto.push(b.textContent.trim());
         });
 
-        detalles.innerHTML = texto.join(" | ");
+        detalles.innerHTML = texto.join("   ");
     });
 
+    // Obtener datos
+    const seccion = document.getElementById("lbAsistenciaSeccion").innerText;
+    const fecha = document.getElementById("fecha").value;
+    const presentes = document.getElementById("total").innerText;
+    const ausentes = document.getElementById("diferencia").innerText;
+    const total = document.getElementById("totalAlumnos").innerText;
+    
+    // 🔹 Agregar título
+    const titulo = `Reporte de asistencia ${seccion} Presentes ${presentes} Ausentes ${ausentes} Total ${total}`;
+
+    const thead = tablaClon.querySelector("thead");
+    const filaTitulo = document.createElement("tr");
+    const thTitulo = document.createElement("th");
+
+    const totalCols = thead.querySelectorAll("th").length;
+    thTitulo.colSpan = totalCols;
+    thTitulo.textContent = titulo;
+    thTitulo.style.textAlign = "center";
+    thTitulo.style.fontWeight = "bold";
+
+    filaTitulo.appendChild(thTitulo);
+    thead.insertBefore(filaTitulo, thead.firstChild);
+
+    // 🔹 Crear workbook
     const wb = XLSX.utils.table_to_book(tablaClon, { sheet: "Asistencia" });
 
-    XLSX.writeFile(wb, "asistencia.xlsx");
+    // 🔹 Obtener worksheet
+    const ws = wb.Sheets["Asistencia"];
+
+    // 🔥 AUTO AJUSTE DE COLUMNAS
+    const colWidths = [];
+
+    const todasFilas = tablaClon.querySelectorAll("tr");
+
+    todasFilas.forEach(tr => {
+
+        const esTitulo = tr.querySelector("th")?.colSpan > 1;
+        if (esTitulo) return;
+
+        tr.querySelectorAll("th, td").forEach((celda, i) => {
+            const texto = celda.innerText || "";
+            const largo = texto.length;
+
+            colWidths[i] = Math.max(colWidths[i] || 10, largo + 2);
+        });
+    });
+
+    ws["!cols"] = colWidths.map(w => ({ wch: w }));
+
+    // 📥 Exportar
+    XLSX.writeFile(wb, "SEAD_Reporte_asistencia.xlsx");
 }
 
 async function exportarPDF() {
@@ -439,8 +488,10 @@ async function exportarPDF() {
     const ausentes = document.getElementById("diferencia").innerText;
     const total = document.getElementById("totalAlumnos").innerText;
     
+    doc.setFontSize(14);
+    doc.text(`Reporte de asistencia ${seccion}`,14,15);
     doc.setFontSize(10);
-    doc.text(`Reporte de asistencia ${seccion}\nPresentes ${presentes} Ausentes ${ausentes} Total ${total} Fecha ${formatearFecha(fecha)}`, 14, 15);
+    doc.text(`Presentes ${presentes} Ausentes ${ausentes} Total ${total} Fecha ${formatearFecha(fecha)}`, 14, 22);
 
         // =========================================================
     // 🔹 CLONAR TABLA
@@ -504,10 +555,10 @@ async function exportarPDF() {
             if (badges.length === 0) return;
 
             // 🔹 Obtener valores
-            const entrada = badges[0]?.innerText.trim() || "";
-            const salida = badges[1]?.innerText.trim() || "";
-            const entrada2 = badges[3]?.innerText.trim() || "";
-            const salida2 = badges[4]?.innerText.trim() || "";
+            const entrada = badges[0]?.innerText?.trim() || "";
+            const salida = badges[1]?.innerText?.trim() || "";
+            const entrada2 = badges[3]?.innerText?.trim() || "";
+            const salida2 = badges[4]?.innerText?.trim() || "";
 
             // 🔹 Construir texto
             let texto = "";

@@ -412,7 +412,7 @@ function exportarExcel() {
     const fecha = document.getElementById("fecha").value;
     const presentes = document.getElementById("total").innerText;
     const ausentes = document.getElementById("diferencia").innerText;
-    const total = document.getElementById("totalAlumnos").innerText;
+    const total = document.getElementById("totalAlumnosInstitucion").innerText;
     
     // 🔹 Agregar título
     const titulo = `Reporte de asistencia ${seccion} Presentes ${presentes} Ausentes ${ausentes} Total ${total}`;
@@ -553,10 +553,10 @@ async function exportarPDF() {
             if (badges.length === 0) return;
 
             // 🔹 Obtener valores
-            const entrada = badges[0]?.innerText.trim() || "";
-            const salida = badges[1]?.innerText.trim() || "";
-            const entrada2 = badges[3]?.innerText.trim() || "";
-            const salida2 = badges[4]?.innerText.trim() || "";
+            const entrada = badges[0]?.innerText?.trim() || "";
+            const salida = badges[1]?.innerText?.trim() || "";
+            const entrada2 = badges[3]?.innerText?.trim() || "";
+            const salida2 = badges[4]?.innerText?.trim() || "";
 
             // 🔹 Construir texto
             let texto = "";

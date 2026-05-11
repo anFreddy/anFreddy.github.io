@@ -443,7 +443,7 @@ async function exportarPDF() {
     // =========================================================
 
     doc.save(
-        "SEAD_Reporte_Horas_Acumuladas.pdf"
+        "SEAD_Reporte.pdf"
     );
 }
 
