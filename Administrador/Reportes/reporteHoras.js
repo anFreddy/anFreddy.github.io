@@ -43,10 +43,22 @@ function llenarSelect(id, data) {
     // limpiar antes de llenar
     select.innerHTML = '';
 
+    let seleccionado = false;
+
     data.forEach(sec => {
         const option = document.createElement("option");
         option.value = sec.nombre;
         option.textContent = sec.nombre;
+
+        // Solo seleccionar la primera coincidencia
+        if (
+            !seleccionado &&
+            sec.nombre.toLowerCase().includes("docente")
+        ) {
+            option.selected = true;
+            seleccionado = true;
+        }
+
         select.appendChild(option);
     });
 }
@@ -66,7 +78,9 @@ async function obtenerAsistencias() {
         const fechaDesde = document.getElementById("fechaInicio").value;
         const fechaHasta = document.getElementById("fechaFin").value;
 
-        const data = await apiFetch(`alumnos/asistencia-periodo?seccion=${seccion}&fechaDesde=${fechaDesde}&fechaHasta=${fechaHasta}`);
+        const data = await apiFetch(`alumnos/asistencia-suma-periodo?seccion=${seccion}&fechaDesde=${fechaDesde}&fechaHasta=${fechaHasta}`);
+
+        console.log(data);
 
         if (data.length === 0){
             alert("No se encontraron registros en el rango de fechas seleccionado");
@@ -122,7 +136,7 @@ async function renderTabla(data, seccion) {
     // Agregar columnas
     html = `
     <tr>
-       <th>NIE</th>
+       <th>DUI o NIE</th>
        <th>Apellido</th>
        <th>Nombre</th>
     `;
@@ -134,36 +148,79 @@ async function renderTabla(data, seccion) {
     html += `
     <th>Total</th> 
     <th>Porcentaje</th>
+    <th>Total horas</th>
     </tr>`;
 
     thead.innerHTML = html;
 
     let contador;
+    let sumaHorasTotal;
     html = "";
     alumnosUnicos.forEach(a => {
         contador = 0;
+        sumaHorasTotal = 0;
+
         html += `<tr>
         <td>${a.nieId}</td>
         <td>${a.apellido}</td>
         <td>${a.nombre}</td>
     `;
-
         fechasUnicas.forEach(f => {
-            const registro = data.find(d =>
-                d.nie === a.nieId && d.fecha === f
-            );
-            if (registro)
+            const registros = data
+                .filter(d => d.nie === a.nieId && d.fecha === f);
+
+            const horaMenor = registros
+                .sort((a, b) => a.hora.localeCompare(b.hora))[0];
+
+            const horaMayor = registros
+                .filter(d => d.hora > horaMenor.hora)
+                .sort((a, b) => b.hora.localeCompare(a.hora))[0];
+
+            // Calcular diferencia de horas
+            let totalHoras = "";
+            if (horaMenor && horaMayor) {
+                const [h1, m1, s1 = 0] = horaMenor.hora.split(":").map(Number);
+                const [h2, m2, s2 = 0] = horaMayor.hora.split(":").map(Number);
+
+                const inicio = new Date(0, 0, 0, h1, m1, s1);
+                const fin = new Date(0, 0, 0, h2, m2, s2);
+
+                const diferenciaMs = fin - inicio;
+
+                const horas = Math.floor(diferenciaMs / (1000 * 60 * 60));
+                const minutos = Math.floor((diferenciaMs % (1000 * 60 * 60)) / (1000 * 60));
+
+                totalHoras = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`;
+
+                // Acumular horas
+                sumaHorasTotal += (horas * 60) + minutos;
+            }
+
+            if (horaMenor)
                 contador++;
+
             html += `<td>
-            ${crearBadge(registro ? formatearHora(registro.hora) : "", "badge-green")}
-        </td>`;
+                <div class="d-flex flex-wrap gap-1">
+                    ${crearBadge(formatearHora(horaMenor? horaMenor.hora : ""), "badge-green")}
+                    ${crearBadge(formatearHora(horaMayor? horaMayor.hora : ""), "badge-blue")}
+                    ${crearBadge(totalHoras, "badge-yellow")}
+                </div>
+            </td>`;
         });
 
         const porcentaje = (contador * 100 / fechasUnicas.length).toFixed(0);
 
+        // Convertir acumulado a HH:mm
+        const horasTotales = Math.floor(sumaHorasTotal / 60);
+        const minutosTotales = sumaHorasTotal % 60;
+
+        const totalGeneralHoras =
+            `${String(horasTotales).padStart(2, '0')}:${String(minutosTotales).padStart(2, '0')}`;
+
         html += `
         <td>${contador}</td>
-        <td>${porcentaje}%</td> 
+        <td>${porcentaje}%</td>
+        <td>${totalGeneralHoras}</td>
         </tr>`;
     });
 

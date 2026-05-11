@@ -146,9 +146,9 @@ function renderTabla(data) {
                 <td>
                 <div class="d-flex flex-wrap gap-1">
                     ${crearBadge(formatearHora(a.matutina_Entrada), "badge-green")}
-                    ${crearBadge(formatearHora(a.matutina_Salida), "badge-red")}
-                    ${crearBadge(formatearHora(a.vespertina_Entrada), "badge-blue")}
-                    ${crearBadge(formatearHora(a.vespertina_Salida), "badge-yellow")}
+                    ${crearBadge(formatearHora(a.matutina_Salida), "badge-blue")}
+                    ${crearBadge(formatearHora(a.vespertina_Entrada), "badge-yellow")}
+                    ${crearBadge(formatearHora(a.vespertina_Salida), "badge-red")}
                 </div>
             </td>
             </tr>
