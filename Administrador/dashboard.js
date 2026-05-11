@@ -412,7 +412,7 @@ function exportarExcel() {
     const fecha = document.getElementById("fecha").value;
     const presentes = document.getElementById("total").innerText;
     const ausentes = document.getElementById("diferencia").innerText;
-    const total = document.getElementById("totalAlumnosInstitucion").innerText;
+    const total = document.getElementById("totalAlumnos").innerText;
     
     // 🔹 Agregar título
     const titulo = `Reporte de asistencia ${seccion} Presentes ${presentes} Ausentes ${ausentes} Total ${total}`;
