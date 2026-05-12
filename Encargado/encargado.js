@@ -159,6 +159,28 @@ async function eliminarNIE(alumno) {
     }
 }
 
+async function cambiarContra(){
+    if (!confirm("¿Quieres solicitar cambiar tu contraseña?")) return;
+
+    const email = payload.email;
+
+    try {
+        mostrarLoading();
+        await apiFetch("auth/forgot-password", {
+            method: "POST",
+            body: JSON.stringify({ email })
+        });
+        ocultarLoading();
+
+        alert(`Te enviamos un correo a ${email} para recuperar tu contraseña 📧`);
+
+    } catch (error) {
+        alert("Error al enviar recuperación");
+    } finally{
+        ocultarLoading();
+    }
+}
+
 // Logout
 function logout() {
     localStorage.removeItem("token");

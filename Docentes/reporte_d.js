@@ -204,105 +204,282 @@ function formatearHora(hora) {
     return hora;
 }
 
+async function exportarExcelAsync() {
+    const dataTable = $('#tabla').DataTable();
+
+    // Guardar paginación actual
+    const paginaActual = dataTable.page.len();
+
+    // Mostrar todas las filas
+    dataTable.page.len(-1).draw();
+
+    // Esperar render
+    try{
+        mostrarLoading()
+        setTimeout(() => {
+
+        exportarExcel();
+
+        // Restaurar paginación
+        dataTable.page.len(paginaActual).draw();
+
+    }, 100);
+
+    }catch(error){
+        alert("Error "+error.message)
+    }finally{
+        ocultarLoading();
+    }
+}
+
+async function exportarPDFAsync() {
+    const dataTable = $('#tabla').DataTable();
+
+    // Guardar paginación actual
+    const paginaActual = dataTable.page.len();
+
+    // Mostrar todas las filas
+    dataTable.page.len(-1).draw();
+
+    // Esperar render
+    try{
+        mostrarLoading()
+        setTimeout(() => {
+
+        exportarPDF();
+
+        // Restaurar paginación
+        dataTable.page.len(paginaActual).draw();
+
+    }, 100);
+
+    }catch(error){
+        alert("Error "+error.message)
+    }finally{
+        ocultarLoading();
+    }
+}
+
 // Exportación
 function exportarExcel() {
 
-    if (!confirm("¿Exportar a Excel?")) return;
+    if (!confirm("¿Exportar los datos a Excel?")) return;
 
-    const filas = document.querySelectorAll("#tabla tbody tr");
+    // Mostrar toda la tabla antes de exportar
+    const dataTable = $('#tabla').DataTable();
+    dataTable.page.len(-1).draw();
+
+    const tabla = document.getElementById("tabla");
+
+    // 🔹 Clonar tabla
+    const tablaClon = tabla.cloneNode(true);
+
+    const filas = tablaClon.querySelectorAll("tbody tr");
 
     if (filas.length === 0) {
+
         alert("¡No hay datos para exportar!");
         return;
     }
 
-    const tabla = document.getElementById("tabla");
+    // =====================================================
+    // 🔹 CAMBIAR ENCABEZADO DETALLES
+    // =====================================================
 
-    // 🔹 Obtener encabezados
-    const headers = [];
-    tabla.querySelectorAll("thead th").forEach(th => {
-        headers.push(th.innerText.trim());
+    const headerRow =
+        tablaClon.querySelector("thead tr");
+
+    const thDetalles =
+        headerRow.lastElementChild;
+
+    thDetalles.remove();
+
+    [
+        "Entrada 1",
+        "Salida 1",
+        "Entrada 2",
+        "Salida 2"
+    ].forEach(texto => {
+
+        const th =
+            document.createElement("th");
+
+        th.textContent = texto;
+
+        headerRow.appendChild(th);
     });
 
-    // 🔹 Obtener datos
-    const data = [];
-    tabla.querySelectorAll("tbody tr").forEach(tr => {
-        const fila = {};
-        tr.querySelectorAll("td").forEach((td, i) => {
-            fila[headers[i]] = td.innerText.trim();
-        });
-        data.push(fila);
-    });
+    // =====================================================
+    // 🔹 CONVERTIR BADGES A COLUMNAS
+    // =====================================================
 
-    // 🔹 Crear hoja vacía
-    const ws = XLSX.utils.aoa_to_sheet([]);
+    filas.forEach(fila => {
 
-    // 🔹 Crear título
-    const seccion = document.getElementById("seccion")?.value || "";
-    const fechaDesde = document.getElementById("fechaInicio").value;
-    const fechaHasta = document.getElementById("fechaFin").value;
-    const titulo = `Reporte de la sección ${seccion} Desde ${formatearFecha(fechaDesde)} Hasta ${formatearFecha(fechaHasta)}`;
+        const celdas =
+            fila.querySelectorAll("td");
 
-    // 🔹 Insertar título (fila 1)
-    XLSX.utils.sheet_add_aoa(ws, [[titulo]], { origin: "A1" });
+        const detalles =
+            celdas[celdas.length - 1];
 
-    // 🔹 Insertar encabezados (fila 2)
-    XLSX.utils.sheet_add_aoa(ws, [headers], { origin: "A2" });
+        const badges =
+            detalles.querySelectorAll("span");
 
-    // 🔹 Insertar datos (desde fila 3)
-    XLSX.utils.sheet_add_json(ws, data, {
-        origin: "A3",
-        skipHeader: true
-    });
+        // 🔹 Obtener valores
+        const valores = [];
 
-    // 🔥 Combinar celdas del título
-    ws["!merges"] = [{
-        s: { r: 0, c: 0 },
-        e: { r: 0, c: headers.length - 1 }
-    }];
+        badges.forEach(badge => {
 
-    // 🔥 Estilo del título
-    const tituloCell = XLSX.utils.encode_cell({ r: 0, c: 0 });
-    ws[tituloCell].s = {
-        font: { bold: true, sz: 14 },
-        alignment: { horizontal: "center" }
-    };
-
-    // 🔥 Negrita en encabezados (fila 2)
-    headers.forEach((_, i) => {
-        const cellRef = XLSX.utils.encode_cell({ r: 1, c: i });
-        if (!ws[cellRef]) return;
-
-        ws[cellRef].s = {
-            font: { bold: true }
-        };
-    });
-
-    // 📏 Auto ajuste de columnas
-    const colWidths = headers.map((header) => {
-        let maxLength = header.length;
-
-        data.forEach(row => {
-            const value = row[header] || "";
-            maxLength = Math.max(maxLength, value.length);
+            valores.push(
+                badge.textContent.trim()
+            );
         });
 
-        return { wch: maxLength + 2 };
+        // 🔹 Eliminar celda detalles
+        detalles.remove();
+
+        // 🔹 Agregar nuevas columnas
+        for (let i = 0; i < 4; i++) {
+
+            const td =
+                document.createElement("td");
+
+            td.textContent =
+                valores[i] || "";
+
+            fila.appendChild(td);
+        }
     });
 
-    ws["!cols"] = colWidths;
+    // =====================================================
+    // 🔹 DATOS REPORTE
+    // =====================================================
 
-    // 🔹 Crear libro
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Reporte");
+    const seccion =
+        document.getElementById("lbAsistenciaSeccion").innerText;
 
-    // 📥 Exportar
-    XLSX.writeFile(wb, "SEAD_Reporte.xlsx");
+    const fecha =
+        document.getElementById("fecha").value;
+
+    const presentes =
+        document.getElementById("total").innerText;
+
+    const ausentes =
+        document.getElementById("diferencia").innerText;
+
+    const total =
+        document.getElementById("totalAlumnos").innerText;
+
+    // =====================================================
+    // 🔹 TÍTULO
+    // =====================================================
+
+    const titulo =
+        `Reporte de asistencia ${seccion} ` +
+        `Presentes ${presentes} ` +
+        `Ausentes ${ausentes} ` +
+        `Total ${total} ` +
+        `Fecha ${formatearFecha(fecha)}`;
+
+    const thead =
+        tablaClon.querySelector("thead");
+
+    const filaTitulo =
+        document.createElement("tr");
+
+    const thTitulo =
+        document.createElement("th");
+
+    const totalCols =
+        thead.querySelectorAll("tr:last-child th").length;
+
+    thTitulo.colSpan =
+        totalCols;
+
+    thTitulo.textContent =
+        titulo;
+
+    thTitulo.style.textAlign =
+        "center";
+
+    thTitulo.style.fontWeight =
+        "bold";
+
+    filaTitulo.appendChild(thTitulo);
+
+    thead.insertBefore(
+        filaTitulo,
+        thead.firstChild
+    );
+
+    // =====================================================
+    // 🔹 CREAR WORKBOOK
+    // =====================================================
+
+    const wb =
+        XLSX.utils.table_to_book(
+            tablaClon,
+            {
+                sheet: "Asistencia"
+            }
+        );
+
+    const ws =
+        wb.Sheets["Asistencia"];
+
+    // =====================================================
+    // 🔹 AUTO AJUSTE COLUMNAS
+    // =====================================================
+
+    const colWidths = [];
+
+    const todasFilas =
+        tablaClon.querySelectorAll("tr");
+
+    todasFilas.forEach(tr => {
+
+        const esTitulo =
+            tr.querySelector("th")?.colSpan > 1;
+
+        if (esTitulo) return;
+
+        tr.querySelectorAll("th, td")
+            .forEach((celda, i) => {
+
+                const texto =
+                    celda.innerText || "";
+
+                const largo =
+                    texto.length;
+
+                colWidths[i] = Math.max(
+                    colWidths[i] || 10,
+                    largo + 2
+                );
+            });
+    });
+
+    ws["!cols"] =
+        colWidths.map(w => ({
+            wch: w
+        }));
+
+    // =====================================================
+    // 🔹 EXPORTAR
+    // =====================================================
+
+    XLSX.writeFile(
+        wb,
+        "SEAD_Reporte_asistencia.xlsx"
+    );
 }
 
 async function exportarPDF() {
 
     if (!confirm("¿Exportar a PDF?")) return;
+
+    // Mostrar toda la tabla antes de exportar
+    const dataTable = $('#tabla').DataTable();
+    dataTable.page.len(-1).draw();
 
     const filas = document.querySelectorAll("#tabla tbody tr");
 

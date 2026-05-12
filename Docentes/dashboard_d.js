@@ -378,10 +378,70 @@ function formatearFecha(fecha) {
     return `${day}/${month}/${year}`;
 }
 
+async function exportarExcelAsync() {
+    const dataTable = $('#tabla').DataTable();
+
+    // Guardar paginación actual
+    const paginaActual = dataTable.page.len();
+
+    // Mostrar todas las filas
+    dataTable.page.len(-1).draw();
+
+    // Esperar render
+    try{
+        mostrarLoading()
+        setTimeout(() => {
+
+        exportarExcel();
+
+        // Restaurar paginación
+        dataTable.page.len(paginaActual).draw();
+
+    }, 100);
+
+    }catch(error){
+        alert("Error "+error.message)
+    }finally{
+        ocultarLoading();
+    }
+}
+
+async function exportarPDFAsync() {
+    const dataTable = $('#tabla').DataTable();
+
+    // Guardar paginación actual
+    const paginaActual = dataTable.page.len();
+
+    // Mostrar todas las filas
+    dataTable.page.len(-1).draw();
+
+    // Esperar render
+    try{
+        mostrarLoading()
+        setTimeout(() => {
+
+        exportarPDF();
+
+        // Restaurar paginación
+        dataTable.page.len(paginaActual).draw();
+
+    }, 100);
+
+    }catch(error){
+        alert("Error "+error.message)
+    }finally{
+        ocultarLoading();
+    }
+}
+
 // Exportación
 function exportarExcel() {
 
     if (!confirm("¿Exportar los datos a Excel?")) return;
+
+    // Mostrar toda la tabla antes de exportar
+    const dataTable = $('#tabla').DataTable();
+    dataTable.page.len(-1).draw();
 
     const tabla = document.getElementById("tabla");
 
@@ -465,6 +525,10 @@ function exportarExcel() {
 async function exportarPDF() {
 
     if (!confirm("¿Exportar los datos a PDF?")) return;
+
+    // Mostrar toda la tabla antes de exportar
+    const dataTable = $('#tabla').DataTable();
+    dataTable.page.len(-1).draw();
 
     const filas = document.querySelectorAll("#tabla tbody tr");
 
@@ -557,8 +621,8 @@ async function exportarPDF() {
             // 🔹 Obtener valores
             const entrada = badges[0]?.innerText?.trim() || "";
             const salida = badges[1]?.innerText?.trim() || "";
-            const entrada2 = badges[3]?.innerText?.trim() || "";
-            const salida2 = badges[4]?.innerText?.trim() || "";
+            const entrada2 = badges[2]?.innerText?.trim() || "";
+            const salida2 = badges[3]?.innerText?.trim() || "";
 
             // 🔹 Construir texto
             let texto = "";
@@ -599,6 +663,28 @@ async function exportarPDF() {
     doc.save(
         "SEAD_Reporte_asistencia.pdf"
     );
+}
+
+async function cambiarContra(){
+    if (!confirm("¿Quieres solicitar cambiar tu contraseña?")) return;
+
+    const email = payload.email;
+
+    try {
+        mostrarLoading();
+        await apiFetch("auth/forgot-password", {
+            method: "POST",
+            body: JSON.stringify({ email })
+        });
+        ocultarLoading();
+
+        alert(`Te enviamos un correo a ${email} para recuperar tu contraseña 📧`);
+
+    } catch (error) {
+        alert("Error al enviar recuperación");
+    } finally{
+        ocultarLoading();
+    }
 }
 
 function cerrarSesion() {

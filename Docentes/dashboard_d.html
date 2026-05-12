@@ -142,6 +142,12 @@
                             <div id="rolUsuario" class="fw-semibold">Rol</div>
                         </div>
 
+                        <div class="text-muted small mb-2">
+                            <a href="#" onclick="cambiarContra()">
+                                ¿Cambiar contraseña?
+                            </a>
+                        </div>
+
                         <hr>
 
                         <!-- Total alumnos -->
@@ -295,8 +301,8 @@
                             Exportar
                         </button>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#" onclick="exportarExcel()">Excel</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="exportarPDF()">PDF</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="exportarExcelAsync()">Excel</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="exportarPDFAsync()">PDF</a></li>
                         </ul>
                     </div>
 
@@ -419,8 +425,6 @@
             </div>
         </div>
     </div>
-
-
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 

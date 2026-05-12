@@ -383,86 +383,219 @@ function exportarExcel() {
 
     const tabla = document.getElementById("tabla");
 
-    // Clonar la tabla para no afectar la original
+    // Mostrar toda la tabla antes de exportar
+    const dataTable = $('#tabla').DataTable();
+    dataTable.page.len(-1).draw();
+
+    // 🔹 Clonar tabla
     const tablaClon = tabla.cloneNode(true);
 
     const filas = tablaClon.querySelectorAll("tbody tr");
 
-    if (filas.length === 0){
+    if (filas.length === 0) {
+
         alert("¡No hay datos para exportar!");
         return;
     }
 
-    // 🔹 Convertir badges a texto
-    filas.forEach(fila => {
-        const celdas = fila.querySelectorAll("td");
-        const detalles = celdas[celdas.length - 1];
-        const badges = detalles.querySelectorAll("span");
+    // =====================================================
+    // 🔹 CAMBIAR ENCABEZADO DETALLES
+    // =====================================================
 
-        let texto = [];
-        badges.forEach(b => {
-            texto.push(b.textContent.trim());
-        });
+    const headerRow =
+        tablaClon.querySelector("thead tr");
 
-        detalles.innerHTML = texto.join("   ");
+    const thDetalles =
+        headerRow.lastElementChild;
+
+    thDetalles.remove();
+
+    [
+        "Entrada 1",
+        "Salida 1",
+        "Entrada 2",
+        "Salida 2"
+    ].forEach(texto => {
+
+        const th =
+            document.createElement("th");
+
+        th.textContent = texto;
+
+        headerRow.appendChild(th);
     });
 
-    // Obtener datos
-    const seccion = document.getElementById("lbAsistenciaSeccion").innerText;
-    const fecha = document.getElementById("fecha").value;
-    const presentes = document.getElementById("total").innerText;
-    const ausentes = document.getElementById("diferencia").innerText;
-    const total = document.getElementById("totalAlumnos").innerText;
-    
-    // 🔹 Agregar título
-    const titulo = `Reporte de asistencia ${seccion} Presentes ${presentes} Ausentes ${ausentes} Total ${total}`;
+    // =====================================================
+    // 🔹 CONVERTIR BADGES A COLUMNAS
+    // =====================================================
 
-    const thead = tablaClon.querySelector("thead");
-    const filaTitulo = document.createElement("tr");
-    const thTitulo = document.createElement("th");
+    filas.forEach(fila => {
 
-    const totalCols = thead.querySelectorAll("th").length;
-    thTitulo.colSpan = totalCols;
-    thTitulo.textContent = titulo;
-    thTitulo.style.textAlign = "center";
-    thTitulo.style.fontWeight = "bold";
+        const celdas =
+            fila.querySelectorAll("td");
+
+        const detalles =
+            celdas[celdas.length - 1];
+
+        const badges =
+            detalles.querySelectorAll("span");
+
+        // 🔹 Obtener valores
+        const valores = [];
+
+        badges.forEach(badge => {
+
+            valores.push(
+                badge.textContent.trim()
+            );
+        });
+
+        // 🔹 Eliminar celda detalles
+        detalles.remove();
+
+        // 🔹 Agregar nuevas columnas
+        for (let i = 0; i < 4; i++) {
+
+            const td =
+                document.createElement("td");
+
+            td.textContent =
+                valores[i] || "";
+
+            fila.appendChild(td);
+        }
+    });
+
+    // =====================================================
+    // 🔹 DATOS REPORTE
+    // =====================================================
+
+    const seccion =
+        document.getElementById("lbAsistenciaSeccion").innerText;
+
+    const fecha =
+        document.getElementById("fecha").value;
+
+    const presentes =
+        document.getElementById("total").innerText;
+
+    const ausentes =
+        document.getElementById("diferencia").innerText;
+
+    const total =
+        document.getElementById("totalAlumnos").innerText;
+
+    // =====================================================
+    // 🔹 TÍTULO
+    // =====================================================
+
+    const titulo =
+        `Reporte de asistencia ${seccion} ` +
+        `Presentes ${presentes} ` +
+        `Ausentes ${ausentes} ` +
+        `Total ${total} ` +
+        `Fecha ${formatearFecha(fecha)}`;
+
+    const thead =
+        tablaClon.querySelector("thead");
+
+    const filaTitulo =
+        document.createElement("tr");
+
+    const thTitulo =
+        document.createElement("th");
+
+    const totalCols =
+        thead.querySelectorAll("tr:last-child th").length;
+
+    thTitulo.colSpan =
+        totalCols;
+
+    thTitulo.textContent =
+        titulo;
+
+    thTitulo.style.textAlign =
+        "center";
+
+    thTitulo.style.fontWeight =
+        "bold";
 
     filaTitulo.appendChild(thTitulo);
-    thead.insertBefore(filaTitulo, thead.firstChild);
 
-    // 🔹 Crear workbook
-    const wb = XLSX.utils.table_to_book(tablaClon, { sheet: "Asistencia" });
+    thead.insertBefore(
+        filaTitulo,
+        thead.firstChild
+    );
 
-    // 🔹 Obtener worksheet
-    const ws = wb.Sheets["Asistencia"];
+    // =====================================================
+    // 🔹 CREAR WORKBOOK
+    // =====================================================
 
-    // 🔥 AUTO AJUSTE DE COLUMNAS
+    const wb =
+        XLSX.utils.table_to_book(
+            tablaClon,
+            {
+                sheet: "Asistencia"
+            }
+        );
+
+    const ws =
+        wb.Sheets["Asistencia"];
+
+    // =====================================================
+    // 🔹 AUTO AJUSTE COLUMNAS
+    // =====================================================
+
     const colWidths = [];
 
-    const todasFilas = tablaClon.querySelectorAll("tr");
+    const todasFilas =
+        tablaClon.querySelectorAll("tr");
 
     todasFilas.forEach(tr => {
 
-        const esTitulo = tr.querySelector("th")?.colSpan > 1;
+        const esTitulo =
+            tr.querySelector("th")?.colSpan > 1;
+
         if (esTitulo) return;
 
-        tr.querySelectorAll("th, td").forEach((celda, i) => {
-            const texto = celda.innerText || "";
-            const largo = texto.length;
+        tr.querySelectorAll("th, td")
+            .forEach((celda, i) => {
 
-            colWidths[i] = Math.max(colWidths[i] || 10, largo + 2);
-        });
+                const texto =
+                    celda.innerText || "";
+
+                const largo =
+                    texto.length;
+
+                colWidths[i] = Math.max(
+                    colWidths[i] || 10,
+                    largo + 2
+                );
+            });
     });
 
-    ws["!cols"] = colWidths.map(w => ({ wch: w }));
+    ws["!cols"] =
+        colWidths.map(w => ({
+            wch: w
+        }));
 
-    // 📥 Exportar
-    XLSX.writeFile(wb, "SEAD_Reporte_asistencia.xlsx");
+    // =====================================================
+    // 🔹 EXPORTAR
+    // =====================================================
+
+    XLSX.writeFile(
+        wb,
+        "SEAD_Reporte_asistencia.xlsx"
+    );
 }
 
 async function exportarPDF() {
 
     if (!confirm("¿Exportar los datos a PDF?")) return;
+
+    // Mostrar toda la tabla antes de exportar
+    const dataTable = $('#tabla').DataTable();
+    dataTable.page.len(-1).draw();
 
     const filas = document.querySelectorAll("#tabla tbody tr");
 
@@ -555,8 +688,8 @@ async function exportarPDF() {
             // 🔹 Obtener valores
             const entrada = badges[0]?.innerText?.trim() || "";
             const salida = badges[1]?.innerText?.trim() || "";
-            const entrada2 = badges[3]?.innerText?.trim() || "";
-            const salida2 = badges[4]?.innerText?.trim() || "";
+            const entrada2 = badges[2]?.innerText?.trim() || "";
+            const salida2 = badges[3]?.innerText?.trim() || "";
 
             // 🔹 Construir texto
             let texto = "";
@@ -597,6 +730,28 @@ async function exportarPDF() {
     doc.save(
         "SEAD_Reporte_asistencia.pdf"
     );
+}
+
+async function cambiarContra(){
+    if (!confirm("¿Quieres solicitar cambiar tu contraseña?")) return;
+
+    const email = payload.email;
+
+    try {
+        mostrarLoading();
+        await apiFetch("auth/forgot-password", {
+            method: "POST",
+            body: JSON.stringify({ email })
+        });
+        ocultarLoading();
+
+        alert(`Te enviamos un correo a ${email} para recuperar tu contraseña 📧`);
+
+    } catch (error) {
+        alert("Error al enviar recuperación");
+    } finally{
+        ocultarLoading();
+    }
 }
 
 function cerrarSesion() {

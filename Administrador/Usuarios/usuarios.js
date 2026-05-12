@@ -360,6 +360,62 @@ async function eliminar(id) {
     }
 }
 
+async function exportarExcelAsync() {
+    const dataTable = $('#tabla').DataTable();
+
+    // Guardar paginación actual
+    const paginaActual = dataTable.page.len();
+
+    // Mostrar todas las filas
+    dataTable.page.len(-1).draw();
+
+    // Esperar render
+    try{
+        mostrarLoading()
+        setTimeout(() => {
+
+        exportarExcel();
+
+        // Restaurar paginación
+        dataTable.page.len(paginaActual).draw();
+
+    }, 100);
+
+    }catch(error){
+        alert("Error "+error.message)
+    }finally{
+        ocultarLoading();
+    }
+}
+
+async function exportarPDFAsync() {
+    const dataTable = $('#tabla').DataTable();
+
+    // Guardar paginación actual
+    const paginaActual = dataTable.page.len();
+
+    // Mostrar todas las filas
+    dataTable.page.len(-1).draw();
+
+    // Esperar render
+    try{
+        mostrarLoading()
+        setTimeout(() => {
+
+        exportarPDF();
+
+        // Restaurar paginación
+        dataTable.page.len(paginaActual).draw();
+
+    }, 100);
+
+    }catch(error){
+        alert("Error "+error.message)
+    }finally{
+        ocultarLoading();
+    }
+}
+
 // Exportación
 function exportarExcel() {
 

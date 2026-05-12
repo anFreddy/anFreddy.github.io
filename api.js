@@ -1,4 +1,5 @@
-const API_URL = "https://seadapi.onrender.com/api";
+const API_URL = "http://localhost:5000/api";
+//const API_URL = "https://seadapi.onrender.com/api";
 
 async function apiFetch(endpoint, options = {}) {
     const loader = document.getElementById("loader");
@@ -31,7 +32,7 @@ async function apiFetch(endpoint, options = {}) {
                 mensaje = text;
             }
 
-            // AQUÍ EL CAMBIO IMPORTANTE
+            // 🔥 AQUÍ EL CAMBIO IMPORTANTE
             const err = new Error(mensaje || "Error en el servidor");
             err.status = res.status;
 
