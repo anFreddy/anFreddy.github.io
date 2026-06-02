@@ -17,7 +17,7 @@ const messaging = getMessaging(app);
 window.activarNotificaciones = async () => {
 
     try {
-
+        mostrarLoading();
         const permiso = await Notification.requestPermission();
 
         if (permiso !== "granted") {
@@ -28,7 +28,6 @@ window.activarNotificaciones = async () => {
         toggleNotificaciones();
 
     } catch (error) {
-
         console.error(error);
     }
 };
@@ -89,6 +88,8 @@ async function toggleNotificaciones() {
 
         marcarNotificacionesActivas();
     }
+
+    ocultarLoading();
 }
 
 function marcarNotificacionesActivas() {
@@ -118,6 +119,8 @@ async function marcarNotificacionesDesactivadas() {
 
 async function cargarEstadoNotificaciones() {
 
+    mostrarLoading();
+
     const permiso = Notification.permission;
 
     if (permiso !== "granted") {
@@ -143,6 +146,8 @@ async function cargarEstadoNotificaciones() {
     } else {
         marcarNotificacionesDesactivadas();
     }
+
+    ocultarLoading();
 }
 
 // Ejecutar cuando cargue la página
