@@ -10,15 +10,38 @@
     <link rel="apple-touch-icon" href="../Logos/SEAD ico.png">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
+    
     <style>
         body {
             background: linear-gradient(135deg, #0d6efd, #6610f2);
             min-height: 100vh;
         }
-
+    
         .card {
             border-radius: 20px;
+        }
+    
+        .btn-notificaciones {
+            margin-top: 8px;
+            border: none;
+            border-radius: 25px;
+            padding: 8px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f1f1f1;
+            color: #444;
+        }
+    
+        .btn-notificaciones:hover {
+            transform: translateY(-1px);
+        }
+    
+        .btn-notificaciones.activo {
+            background: #0d6efd;
+            color: white;
+            box-shadow: 0 4px 12px rgba(13, 110, 253, .3);
         }
     </style>
 </head>
@@ -34,7 +57,7 @@
                 <!-- IZQUIERDA -->
                 <div class="d-flex align-items-center">
 
-                    <img id="logoInstitucion" src="../Logos/Institucion_logo.png" alt="Logo" width="50"
+                    <img id="logoInstitucion" src="../Logos/Institucion_logo.png" alt="Logo" width="100"
                         class="me-3 rounded">
 
                     <div>
@@ -44,6 +67,14 @@
                             <a href="#" onclick="cambiarContra()">
                                 ¿Cambiar contraseña?
                             </a>
+
+                        <br>
+                        <button id="btnNotificaciones" class="btn-notificaciones" onclick="activarNotificaciones()">
+                        
+                            ⚪ Activar notificaciones
+                        
+                        </button>
+
                     </div>
 
                 </div>
@@ -93,6 +124,7 @@
     <script src="../api.js"></script>
     <script src="../loading.js"></script>
     <script src="encargado.js"></script>
+    <script type="module" src="js/notificaciones.js"></script>
 
 </body>
 
