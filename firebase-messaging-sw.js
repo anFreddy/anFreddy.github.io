@@ -11,3 +11,35 @@ firebase.initializeApp({
 });
 
 const messaging = firebase.messaging();
+
+self.addEventListener('notificationclick', (event) => {
+
+    event.notification.close();
+
+    const url =
+        event.notification.data?.FCM_MSG?.data?.url ||
+        'https://seadpubliphoto.com';
+
+    event.waitUntil(
+        clients.openWindow(url)
+    );
+
+});
+
+messaging.onBackgroundMessage((payload) => {
+
+    const titulo = payload.notification.title;
+
+    const opciones = {
+        body: payload.notification.body,
+        icon: payload.notification.icon,
+        badge: payload.notification.badge,
+        data: payload
+    };
+
+    self.registration.showNotification(
+        titulo,
+        opciones
+    );
+
+});
