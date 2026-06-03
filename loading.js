@@ -33,7 +33,7 @@ function ocultarLoading() {
 async function cargarToast() {
 
     const response =
-        await fetch('/Componentes/toast.html');
+        await fetch('Componentes/toast.html');
 
     const html = await response.text();
 
