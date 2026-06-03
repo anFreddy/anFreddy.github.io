@@ -16,30 +16,25 @@ self.addEventListener('notificationclick', (event) => {
 
     event.notification.close();
 
-    const url =
-        event.notification.data?.FCM_MSG?.data?.url ||
-        'https://seadpubliphoto.com/Encargado/encargado.html';
-
     event.waitUntil(
-        clients.openWindow(url)
+        clients.openWindow(
+            event.notification.data.url
+        )
     );
 
 });
 
 messaging.onBackgroundMessage((payload) => {
-/*
-    const titulo = payload.notification.title;
-
-    const opciones = {
-        body: payload.notification.body,
-        icon: payload.notification.icon,
-        badge: payload.notification.badge,
-        data: payload
-    };
 
     self.registration.showNotification(
-        titulo,
-        opciones
+        payload.data.title,
+        {
+            body: payload.data.body,
+            icon: payload.data.icon,
+            badge: payload.data.badge,
+            requireInteraction: true,
+            data: payload.data
+        }
     );
-*/
+
 });
