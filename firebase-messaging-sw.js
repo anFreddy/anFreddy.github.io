@@ -27,7 +27,7 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 messaging.onBackgroundMessage((payload) => {
-
+/*
     const titulo = payload.notification.title;
 
     const opciones = {
@@ -41,5 +41,5 @@ messaging.onBackgroundMessage((payload) => {
         titulo,
         opciones
     );
-
+*/
 });
