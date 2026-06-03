@@ -1,6 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-messaging.js";
-import { onMessage } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-messaging.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyClLVAlo0B1Y8M6YVr2kA5kRQ0WdWZkTBc",
@@ -31,21 +30,6 @@ window.activarNotificaciones = async () => {
         console.error(error);
     }
 };
-
-onMessage(messaging, (payload) => {
-
-    console.log("Mensaje recibido en primer plano:", payload);
-
-    new Notification(
-        payload.notification.title,
-        {
-            body: payload.notification.body
-        }
-    );
-
-    alert(payload.notification.body);
-
-});
 
 async function toggleNotificaciones() {
 
