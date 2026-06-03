@@ -39,11 +39,7 @@ onMessage(messaging, (payload) => {
     new Notification(
         payload.notification.title,
         {
-            body: payload.notification.body,
-            icon: "../../Logos/SEAD ico.png",
-            badge: "../../Logos/Institucion_logo.png",
-            tag: "Asistencia",
-            requireInteraction: true
+            body: payload.notification.body
         }
     );
 
