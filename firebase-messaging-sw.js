@@ -18,7 +18,7 @@ self.addEventListener('notificationclick', (event) => {
 
     const url =
         event.notification.data?.FCM_MSG?.data?.url ||
-        'https://seadpubliphoto.com';
+        'https://seadpubliphoto.com/Encargado/encargado.html';
 
     event.waitUntil(
         clients.openWindow(url)
