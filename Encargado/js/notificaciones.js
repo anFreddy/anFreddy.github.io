@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-messaging.js";
+import { cargarToast, mostrarToast} from './toast.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyClLVAlo0B1Y8M6YVr2kA5kRQ0WdWZkTBc",
@@ -12,6 +13,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
+
+await cargarToast();
 
 onMessage(messaging, (payload) => {
 

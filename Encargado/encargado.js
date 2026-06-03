@@ -173,5 +173,4 @@ function logout() {
 // Ejecutar cuando cargue la página
 document.addEventListener("DOMContentLoaded", () => {
     cargarAlumnos();
-    cargarToast();
 });
