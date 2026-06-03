@@ -14,8 +14,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
 
-await cargarToast();
-
 onMessage(messaging, (payload) => {
 
     console.log(payload);
@@ -149,6 +147,7 @@ async function cargarEstadoNotificaciones() {
 }
 
 // Ejecutar cuando cargue la página
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     cargarEstadoNotificaciones();
+    await cargarToast();
 });
