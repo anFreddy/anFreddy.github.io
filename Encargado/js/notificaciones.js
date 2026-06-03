@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-messaging.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-messaging.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyClLVAlo0B1Y8M6YVr2kA5kRQ0WdWZkTBc",
@@ -12,6 +12,17 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
+
+onMessage(messaging, (payload) => {
+
+    console.log(payload);
+
+    mostrarToast(
+        payload.data.title,
+        payload.data.body
+    );
+
+});
 
 window.activarNotificaciones = async () => {
 
