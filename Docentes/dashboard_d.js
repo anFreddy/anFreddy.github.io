@@ -1,21 +1,27 @@
 // Obtener token
 const token = localStorage.getItem("token");
 
-if (token == null){
-    alert("Por favor, inicia sesión.");
-    window.location.href = "../index.html";
+if (token == null) {
+  alert("Por favor, inicia sesión.");
+  window.location.href = "../index.html";
 }
 
 // Decodificar usuario
-const payload = JSON.parse(atob(token.split('.')[1]));
+const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+
+const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+
+const payload = JSON.parse(new TextDecoder("utf-8").decode(bytes));
 
 // Mostrar datos
-document.getElementById("nombreInstitucion").innerText = payload.institutionName;
-document.getElementById("nombreUsuario").innerText = "Bienvenid@ " + payload.name;
+document.getElementById("nombreInstitucion").innerText =
+  payload.institutionName;
+document.getElementById("nombreUsuario").innerText =
+  "Bienvenid@ " + payload.name;
 document.getElementById("rolUsuario").innerText = payload.role;
 
 if (payload.institutionLogo != "") {
-    document.getElementById("logoInstitucion").src = payload.institutionLogo;
+  document.getElementById("logoInstitucion").src = payload.institutionLogo;
 }
 
 // Fecha automática
@@ -23,122 +29,119 @@ document.getElementById("fecha").value = new Date().toISOString().split("T")[0];
 
 // Cargar total de institución
 async function cargarTotalInstitucion() {
-    try {
-        mostrarLoading();
+  try {
+    mostrarLoading();
 
-        const data = await apiFetch("docentes/totalAlumnosSecciones");
-        document.getElementById("totalAlumnosInstitucion").innerText = data;
+    const data = await apiFetch("docentes/totalAlumnosSecciones");
+    document.getElementById("totalAlumnosInstitucion").innerText = data;
+  } catch (error) {
+    alert(error.message);
 
-    } catch (error) {
-        alert(error.message);
-
-        if (error.status === 401) {
-            localStorage.removeItem("token");
-            window.location.href = "../index.html";
-            return;
-        }
-    } finally{
-        ocultarLoading();
+    if (error.status === 401) {
+      localStorage.removeItem("token");
+      window.location.href = "../index.html";
+      return;
     }
+  } finally {
+    ocultarLoading();
+  }
 }
 
 // Cargar secciones
 async function cargarSecciones() {
-    try {
-        mostrarLoading();
-        const secciones = await apiFetch("docentes/secciones-usuario")
-        
-        const select = document.getElementById("seccion");
-        secciones.forEach(sec => {
-            const option = document.createElement("option");
-            option.value = sec.nombre;
-            option.textContent = sec.nombre;
-            select.appendChild(option);
-        });
+  try {
+    mostrarLoading();
+    const secciones = await apiFetch("docentes/secciones-usuario");
 
-        const selectModal = document.getElementById("seccionModal");
-        secciones.forEach(sec => {
-            const option = document.createElement("option");
-            option.value = sec.nombre;
-            option.textContent = sec.nombre;
-            selectModal.appendChild(option);
-        });
+    const select = document.getElementById("seccion");
+    secciones.forEach((sec) => {
+      const option = document.createElement("option");
+      option.value = sec.nombre;
+      option.textContent = sec.nombre;
+      select.appendChild(option);
+    });
 
-    } catch (error) {
-        alert(error.message);
+    const selectModal = document.getElementById("seccionModal");
+    secciones.forEach((sec) => {
+      const option = document.createElement("option");
+      option.value = sec.nombre;
+      option.textContent = sec.nombre;
+      selectModal.appendChild(option);
+    });
+  } catch (error) {
+    alert(error.message);
 
-        if (error.status === 401) {
-            localStorage.removeItem("token");
-            window.location.href = "../index.html";
-            return;
-        }
-    } finally {
-        ocultarLoading();
+    if (error.status === 401) {
+      localStorage.removeItem("token");
+      window.location.href = "../index.html";
+      return;
     }
+  } finally {
+    ocultarLoading();
+  }
 }
 
 // Cargar asistencia
 async function cargarAsistencia() {
+  const fecha = document.getElementById("fecha").value;
+  const seccion = document.getElementById("seccion").value;
 
-    const fecha = document.getElementById("fecha").value;
-    const seccion = document.getElementById("seccion").value;
-    
-    try {
-        mostrarLoading();
-        const asistencia = await apiFetch(`docentes/asistenciaTotal?fecha=${fecha}&seccion=${seccion}`)
+  try {
+    mostrarLoading();
+    const asistencia = await apiFetch(
+      `docentes/asistenciaTotal?fecha=${fecha}&seccion=${seccion}`,
+    );
 
-        if (seccion !== "") {
-            renderTabla(asistencia);
-            document.getElementById("lbAsistenciaSeccion").innerHTML = seccion;
-        }
-
-        calcularDetalles(asistencia);
-
-    } catch (error) {
-        alert(error.message);
-
-        if (error.status === 401) {
-            localStorage.removeItem("token");
-            window.location.href = "../index.html";
-            return;
-        }
-    } finally {
-        ocultarLoading();
+    if (seccion !== "") {
+      renderTabla(asistencia);
+      document.getElementById("lbAsistenciaSeccion").innerHTML = seccion;
     }
+
+    calcularDetalles(asistencia);
+  } catch (error) {
+    alert(error.message);
+
+    if (error.status === 401) {
+      localStorage.removeItem("token");
+      window.location.href = "../index.html";
+      return;
+    }
+  } finally {
+    ocultarLoading();
+  }
 }
 
 function crearBadge(valor, clase) {
-    if (!valor || valor === "" || valor === null) {
-        return `<span style="
+  if (!valor || valor === "" || valor === null) {
+    return `<span style="
     min-width: 60px;
     height: 22px;
     display: inline-block;
     border-radius: 6px;
     background-color: #e9ecef;
     "></span>`;
-    }
-    return `<span class="badge ${clase}" style="min-width: 60px; display: inline-block; text-align: center;">
+  }
+  return `<span class="badge ${clase}" style="min-width: 60px; display: inline-block; text-align: center;">
     ${valor}</span>`;
 }
 
 function renderTabla(data) {
+  const tabla = $("#tabla");
 
-    const tabla = $('#tabla');
+  // 🔥 1. Si existe DataTable → destruirlo
+  if ($.fn.DataTable.isDataTable("#tabla")) {
+    tabla.DataTable().clear().destroy();
+  }
 
-    // 🔥 1. Si existe DataTable → destruirlo
-    if ($.fn.DataTable.isDataTable('#tabla')) {
-        tabla.DataTable().clear().destroy();
-    }
+  // 🔥 2. Limpiar tbody
+  const tbody = document.getElementById("tbody");
+  tbody.innerHTML = "";
 
-    // 🔥 2. Limpiar tbody
-    const tbody = document.getElementById("tbody");
-    tbody.innerHTML = "";
+  // 🔥 3. Construir HTML
+  let html = "";
 
-    // 🔥 3. Construir HTML
-    let html = "";
-
-    data.forEach(a => {
-        html += `
+  data.forEach((a) => {
+    html += `
             <tr>
                 <td>${a.nie}</td>
                 <td>${a.apellido}</td>
@@ -154,164 +157,161 @@ function renderTabla(data) {
             </td>
             </tr>
         `;
-    });
+  });
 
-    // 🔥 4. Insertar datos nuevos
-    tbody.innerHTML = html;
+  // 🔥 4. Insertar datos nuevos
+  tbody.innerHTML = html;
 
-    // 🔥 5. Volver a activar DataTable
-    activarDataTable();
+  // 🔥 5. Volver a activar DataTable
+  activarDataTable();
 }
 
 function activarDataTable() {
-    if ($.fn.DataTable.isDataTable('#tabla')) {
-        $('#tabla').DataTable().destroy();
-    }
+  if ($.fn.DataTable.isDataTable("#tabla")) {
+    $("#tabla").DataTable().destroy();
+  }
 
-    $('#tabla').DataTable({
-        destroy: true,
-        pageLength: 10,
-        ordering: false,
-        lengthMenu: [10, 25, 50, 100],
-        language: {
-            lengthMenu: "Mostrar _MENU_ registros",
-            zeroRecords: "No se encontraron datos",
-            info: "Mostrando _START_ a _END_ de _TOTAL_",
-            infoEmpty: "Sin registros",
-            search: "Buscar:",
-            paginate: {
-                next: "Siguiente",
-                previous: "Anterior"
-            }
-        }
-    });
+  $("#tabla").DataTable({
+    destroy: true,
+    pageLength: 10,
+    ordering: false,
+    lengthMenu: [10, 25, 50, 100],
+    language: {
+      lengthMenu: "Mostrar _MENU_ registros",
+      zeroRecords: "No se encontraron datos",
+      info: "Mostrando _START_ a _END_ de _TOTAL_",
+      infoEmpty: "Sin registros",
+      search: "Buscar:",
+      paginate: {
+        next: "Siguiente",
+        previous: "Anterior",
+      },
+    },
+  });
 }
 
 function formatearHora(hora) {
-    if (!hora) return "";
+  if (!hora) return "";
 
-    // Si viene con segundos
-    if (hora.length >= 5) {
-        return hora.substring(0, 5);
-    }
+  // Si viene con segundos
+  if (hora.length >= 5) {
+    return hora.substring(0, 5);
+  }
 
-    return hora;
+  return hora;
 }
 
 function calcularDetalles(data) {
+  const entradaM = data.filter((e) => e.matutina_Entrada != null).length;
+  const salidaM = data.filter((e) => e.matutina_Salida != null).length;
+  const entradaV = data.filter((e) => e.vespertina_Entrada != null).length;
+  const salidaV = data.filter((e) => e.vespertina_Salida != null).length;
 
-    const entradaM = data.filter(e => e.matutina_Entrada != null).length;
-    const salidaM = data.filter(e => e.matutina_Salida != null).length;
-    const entradaV = data.filter(e => e.vespertina_Entrada != null).length;
-    const salidaV = data.filter(e => e.vespertina_Salida != null).length;
+  // Pintar en pantalla
+  document.getElementById("em").innerText = entradaM;
+  document.getElementById("sm").innerText = salidaM;
+  document.getElementById("ev").innerText = entradaV;
+  document.getElementById("sv").innerText = salidaV;
 
-    // Pintar en pantalla
-    document.getElementById("em").innerText = entradaM;
-    document.getElementById("sm").innerText = salidaM;
-    document.getElementById("ev").innerText = entradaV;
-    document.getElementById("sv").innerText = salidaV;
-
-    // Cálculos
-    const total = new Set(
+  // Cálculos
+  const total = new Set(
     data
-        .filter(e => e.matutina_Entrada != null || e.vespertina_Entrada != null)
-        .map(e => e.nie)
-    ).size;
-    
-    const presentes = total;
-    const totalAlumnos = data.length;
-    const ausentes = totalAlumnos - presentes;
+      .filter((e) => e.matutina_Entrada != null || e.vespertina_Entrada != null)
+      .map((e) => e.nie),
+  ).size;
 
-    document.getElementById("total").innerText = presentes;
-    document.getElementById("diferencia").innerText = ausentes;
-    document.getElementById("totalAlumnos").innerText = totalAlumnos;
+  const presentes = total;
+  const totalAlumnos = data.length;
+  const ausentes = totalAlumnos - presentes;
 
-    renderGrafico(presentes, ausentes);
+  document.getElementById("total").innerText = presentes;
+  document.getElementById("diferencia").innerText = ausentes;
+  document.getElementById("totalAlumnos").innerText = totalAlumnos;
+
+  renderGrafico(presentes, ausentes);
 }
 
 let chart;
 
 function renderGrafico(presentes, ausentes) {
+  const ctx = document.getElementById("graficoAsistencia").getContext("2d");
 
-    const ctx = document.getElementById('graficoAsistencia').getContext('2d');
+  if (chart) {
+    chart.destroy();
+  }
 
-    if (chart) {
-        chart.destroy();
-    }
+  const sinDatos = presentes === 0 && ausentes === 0;
 
-    const sinDatos = presentes === 0 && ausentes === 0;
+  const total = presentes + ausentes;
 
-    const total = presentes + ausentes;
+  const porcentajeAusentes =
+    total === 0 ? 0 : Math.round((ausentes / total) * 100);
 
-    const porcentajeAusentes = total === 0
-        ? 0
-        : Math.round((ausentes / total) * 100);
+  // pintar porcentaje abajo
+  const labelAusentes = document.getElementById("porcentajeAusentes");
+  if (labelAusentes) {
+    labelAusentes.innerText = porcentajeAusentes + "%";
+  }
 
-    // pintar porcentaje abajo
-    const labelAusentes = document.getElementById("porcentajeAusentes");
-    if (labelAusentes) {
-        labelAusentes.innerText = porcentajeAusentes + "%";
-    }
-
-    chart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: sinDatos ? ['Sin datos'] : ['Presentes', 'Ausentes'],
-            datasets: [{
-                data: sinDatos ? [1] : [presentes, ausentes],
-                backgroundColor: sinDatos
-                    ? ['#dee2e6']
-                    : ['#28a745', '#dc3545']
-            }]
+  chart = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: sinDatos ? ["Sin datos"] : ["Presentes", "Ausentes"],
+      datasets: [
+        {
+          data: sinDatos ? [1] : [presentes, ausentes],
+          backgroundColor: sinDatos ? ["#dee2e6"] : ["#28a745", "#dc3545"],
         },
-        options: {
-            responsive: true,
-            cutout: '65%',
-            plugins: {
-                legend: {
-                    display: !sinDatos,
-                    position: 'bottom'
-                }
-            }
+      ],
+    },
+    options: {
+      responsive: true,
+      cutout: "65%",
+      plugins: {
+        legend: {
+          display: !sinDatos,
+          position: "bottom",
         },
-        plugins: [centerTextPlugin] // 👈 aquí lo activas
-    });
+      },
+    },
+    plugins: [centerTextPlugin], // 👈 aquí lo activas
+  });
 }
 
 const centerTextPlugin = {
-    id: 'centerText',
-    beforeDraw(chart) {
-        const { ctx, chartArea } = chart;
+  id: "centerText",
+  beforeDraw(chart) {
+    const { ctx, chartArea } = chart;
 
-        if (!chartArea) return; // evita error en render inicial
+    if (!chartArea) return; // evita error en render inicial
 
-        const centerX = (chartArea.left + chartArea.right) / 2;
-        const centerY = (chartArea.top + chartArea.bottom) / 2;
+    const centerX = (chartArea.left + chartArea.right) / 2;
+    const centerY = (chartArea.top + chartArea.bottom) / 2;
 
-        const data = chart.config.data.datasets[0].data;
-        const total = data.reduce((a, b) => a + b, 0);
+    const data = chart.config.data.datasets[0].data;
+    const total = data.reduce((a, b) => a + b, 0);
 
-        let texto = "0%";
+    let texto = "0%";
 
-        if (total > 0 && chart.config.data.labels[0] !== "Sin datos") {
-            const porcentaje = Math.round((data[0] / total) * 100);
-            texto = porcentaje + "%";
-        }
-
-        ctx.save();
-        ctx.font = "bold 30px sans-serif";
-        ctx.fillStyle = "#333";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-
-        ctx.fillText(texto, centerX, centerY);
-
-        ctx.restore();
+    if (total > 0 && chart.config.data.labels[0] !== "Sin datos") {
+      const porcentaje = Math.round((data[0] / total) * 100);
+      texto = porcentaje + "%";
     }
+
+    ctx.save();
+    ctx.font = "bold 30px sans-serif";
+    ctx.fillStyle = "#333";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    ctx.fillText(texto, centerX, centerY);
+
+    ctx.restore();
+  },
 };
 
 // Top alumnos
-const modalElement = document.getElementById('modalTopAlumnos');
+const modalElement = document.getElementById("modalTopAlumnos");
 const modalTop = new bootstrap.Modal(modalElement);
 
 const filtroAnio = document.getElementById("filtroAnio");
@@ -320,35 +320,36 @@ const contenedorMes = document.getElementById("contenedorMes");
 const contenedorTabla = document.getElementById("contenedorTabla");
 
 filtroAnio.addEventListener("change", () => {
-    contenedorMes.classList.add("d-none");
+  contenedorMes.classList.add("d-none");
 });
 
 filtroMes.addEventListener("change", () => {
-    contenedorMes.classList.remove("d-none");
+  contenedorMes.classList.remove("d-none");
 });
 
 async function verTopAlumnos() {
+  const seccion = document.getElementById("seccionModal").value;
+  let mesActual = document.getElementById("selectMes").value;
+  const añoActual = new Date().getFullYear();
 
-    const seccion = document.getElementById("seccionModal").value;
-    let mesActual = document.getElementById("selectMes").value;
-    const añoActual = new Date().getFullYear();
+  if (filtroAnio.checked) {
+    mesActual = "";
+  }
 
-    if (filtroAnio.checked) {
-        mesActual = "";
-    }
+  // Mostrar tabla
+  contenedorTabla.classList.remove("d-none");
 
-    // Mostrar tabla
-    contenedorTabla.classList.remove("d-none");
+  try {
+    mostrarLoading();
+    const data = await apiFetch(
+      `alumnos/topAsistencia?seccion=${seccion}&year=${añoActual}&mes=${mesActual}`,
+    );
 
-    try {
-        mostrarLoading();
-        const data = await apiFetch(`alumnos/topAsistencia?seccion=${seccion}&year=${añoActual}&mes=${mesActual}`);
+    const tbody = document.getElementById("tbodyTop");
+    tbody.innerHTML = "";
 
-        const tbody = document.getElementById("tbodyTop");
-        tbody.innerHTML = "";
-
-        data.forEach((a, index) => {
-            tbody.innerHTML += `
+    data.forEach((a, index) => {
+      tbody.innerHTML += `
             <tr>
                 <td>${a.nieID}</td>
                 <td>${a.apellido}</td>
@@ -357,329 +358,312 @@ async function verTopAlumnos() {
                 <td>${a.total}</td>
             </tr>
         `;
-        });
+    });
+  } catch (error) {
+    alert(error.message);
 
-    } catch (error) {
-        alert(error.message);
-
-        if (error.status === 401) {
-            localStorage.removeItem("token");
-            window.location.href = "../index.html";
-            return;
-        }
-
-    } finally {
-        ocultarLoading();
+    if (error.status === 401) {
+      localStorage.removeItem("token");
+      window.location.href = "../index.html";
+      return;
     }
+  } finally {
+    ocultarLoading();
+  }
 }
 
 function formatearFecha(fecha) {
-    const [year, month, day] = fecha.split(/[-\/]/);
-    return `${day}/${month}/${year}`;
+  const [year, month, day] = fecha.split(/[-\/]/);
+  return `${day}/${month}/${year}`;
 }
 
 async function exportarExcelAsync() {
-    const dataTable = $('#tabla').DataTable();
+  const dataTable = $("#tabla").DataTable();
 
-    // Guardar paginación actual
-    const paginaActual = dataTable.page.len();
+  // Guardar paginación actual
+  const paginaActual = dataTable.page.len();
 
-    // Mostrar todas las filas
-    dataTable.page.len(-1).draw();
+  // Mostrar todas las filas
+  dataTable.page.len(-1).draw();
 
-    // Esperar render
-    try{
-        mostrarLoading()
-        setTimeout(() => {
+  // Esperar render
+  try {
+    mostrarLoading();
+    setTimeout(() => {
+      exportarExcel();
 
-        exportarExcel();
-
-        // Restaurar paginación
-        dataTable.page.len(paginaActual).draw();
-
+      // Restaurar paginación
+      dataTable.page.len(paginaActual).draw();
     }, 100);
-
-    }catch(error){
-        alert("Error "+error.message)
-    }finally{
-        ocultarLoading();
-    }
+  } catch (error) {
+    alert("Error " + error.message);
+  } finally {
+    ocultarLoading();
+  }
 }
 
 async function exportarPDFAsync() {
-    const dataTable = $('#tabla').DataTable();
+  const dataTable = $("#tabla").DataTable();
 
-    // Guardar paginación actual
-    const paginaActual = dataTable.page.len();
+  // Guardar paginación actual
+  const paginaActual = dataTable.page.len();
 
-    // Mostrar todas las filas
-    dataTable.page.len(-1).draw();
+  // Mostrar todas las filas
+  dataTable.page.len(-1).draw();
 
-    // Esperar render
-    try{
-        mostrarLoading()
-        setTimeout(() => {
+  // Esperar render
+  try {
+    mostrarLoading();
+    setTimeout(() => {
+      exportarPDF();
 
-        exportarPDF();
-
-        // Restaurar paginación
-        dataTable.page.len(paginaActual).draw();
-
+      // Restaurar paginación
+      dataTable.page.len(paginaActual).draw();
     }, 100);
-
-    }catch(error){
-        alert("Error "+error.message)
-    }finally{
-        ocultarLoading();
-    }
+  } catch (error) {
+    alert("Error " + error.message);
+  } finally {
+    ocultarLoading();
+  }
 }
 
 // Exportación
 function exportarExcel() {
+  if (!confirm("¿Exportar los datos a Excel?")) return;
 
-    if (!confirm("¿Exportar los datos a Excel?")) return;
+  // Mostrar toda la tabla antes de exportar
+  const dataTable = $("#tabla").DataTable();
+  dataTable.page.len(-1).draw();
 
-    // Mostrar toda la tabla antes de exportar
-    const dataTable = $('#tabla').DataTable();
-    dataTable.page.len(-1).draw();
+  const tabla = document.getElementById("tabla");
 
-    const tabla = document.getElementById("tabla");
+  // Clonar la tabla para no afectar la original
+  const tablaClon = tabla.cloneNode(true);
 
-    // Clonar la tabla para no afectar la original
-    const tablaClon = tabla.cloneNode(true);
+  const filas = tablaClon.querySelectorAll("tbody tr");
 
-    const filas = tablaClon.querySelectorAll("tbody tr");
+  if (filas.length === 0) {
+    alert("¡No hay datos para exportar!");
+    return;
+  }
 
-    if (filas.length === 0){
-        alert("¡No hay datos para exportar!");
-        return;
-    }
+  // 🔹 Convertir badges a texto
+  filas.forEach((fila) => {
+    const celdas = fila.querySelectorAll("td");
+    const detalles = celdas[celdas.length - 1];
+    const badges = detalles.querySelectorAll("span");
 
-    // 🔹 Convertir badges a texto
-    filas.forEach(fila => {
-        const celdas = fila.querySelectorAll("td");
-        const detalles = celdas[celdas.length - 1];
-        const badges = detalles.querySelectorAll("span");
-
-        let texto = [];
-        badges.forEach(b => {
-            texto.push(b.textContent.trim());
-        });
-
-        detalles.innerHTML = texto.join("   ");
+    let texto = [];
+    badges.forEach((b) => {
+      texto.push(b.textContent.trim());
     });
 
-    // Obtener datos
-    const seccion = document.getElementById("lbAsistenciaSeccion").innerText;
-    const fecha = document.getElementById("fecha").value;
-    const presentes = document.getElementById("total").innerText;
-    const ausentes = document.getElementById("diferencia").innerText;
-    const total = document.getElementById("totalAlumnos").innerText;
-    
-    // 🔹 Agregar título
-    const titulo = `Reporte de asistencia ${seccion} Presentes ${presentes} Ausentes ${ausentes} Total ${total}`;
+    detalles.innerHTML = texto.join("   ");
+  });
 
-    const thead = tablaClon.querySelector("thead");
-    const filaTitulo = document.createElement("tr");
-    const thTitulo = document.createElement("th");
+  // Obtener datos
+  const seccion = document.getElementById("lbAsistenciaSeccion").innerText;
+  const fecha = document.getElementById("fecha").value;
+  const presentes = document.getElementById("total").innerText;
+  const ausentes = document.getElementById("diferencia").innerText;
+  const total = document.getElementById("totalAlumnos").innerText;
 
-    const totalCols = thead.querySelectorAll("th").length;
-    thTitulo.colSpan = totalCols;
-    thTitulo.textContent = titulo;
-    thTitulo.style.textAlign = "center";
-    thTitulo.style.fontWeight = "bold";
+  // 🔹 Agregar título
+  const titulo = `Reporte de asistencia ${seccion} Presentes ${presentes} Ausentes ${ausentes} Total ${total}`;
 
-    filaTitulo.appendChild(thTitulo);
-    thead.insertBefore(filaTitulo, thead.firstChild);
+  const thead = tablaClon.querySelector("thead");
+  const filaTitulo = document.createElement("tr");
+  const thTitulo = document.createElement("th");
 
-    // 🔹 Crear workbook
-    const wb = XLSX.utils.table_to_book(tablaClon, { sheet: "Asistencia" });
+  const totalCols = thead.querySelectorAll("th").length;
+  thTitulo.colSpan = totalCols;
+  thTitulo.textContent = titulo;
+  thTitulo.style.textAlign = "center";
+  thTitulo.style.fontWeight = "bold";
 
-    // 🔹 Obtener worksheet
-    const ws = wb.Sheets["Asistencia"];
+  filaTitulo.appendChild(thTitulo);
+  thead.insertBefore(filaTitulo, thead.firstChild);
 
-    // 🔥 AUTO AJUSTE DE COLUMNAS
-    const colWidths = [];
+  // 🔹 Crear workbook
+  const wb = XLSX.utils.table_to_book(tablaClon, { sheet: "Asistencia" });
 
-    const todasFilas = tablaClon.querySelectorAll("tr");
+  // 🔹 Obtener worksheet
+  const ws = wb.Sheets["Asistencia"];
 
-    todasFilas.forEach(tr => {
+  // 🔥 AUTO AJUSTE DE COLUMNAS
+  const colWidths = [];
 
-        const esTitulo = tr.querySelector("th")?.colSpan > 1;
-        if (esTitulo) return;
+  const todasFilas = tablaClon.querySelectorAll("tr");
 
-        tr.querySelectorAll("th, td").forEach((celda, i) => {
-            const texto = celda.innerText || "";
-            const largo = texto.length;
+  todasFilas.forEach((tr) => {
+    const esTitulo = tr.querySelector("th")?.colSpan > 1;
+    if (esTitulo) return;
 
-            colWidths[i] = Math.max(colWidths[i] || 10, largo + 2);
-        });
+    tr.querySelectorAll("th, td").forEach((celda, i) => {
+      const texto = celda.innerText || "";
+      const largo = texto.length;
+
+      colWidths[i] = Math.max(colWidths[i] || 10, largo + 2);
     });
+  });
 
-    ws["!cols"] = colWidths.map(w => ({ wch: w }));
+  ws["!cols"] = colWidths.map((w) => ({ wch: w }));
 
-    // 📥 Exportar
-    XLSX.writeFile(wb, "SEAD_Reporte_asistencia.xlsx");
+  // 📥 Exportar
+  XLSX.writeFile(wb, "SEAD_Reporte_asistencia.xlsx");
 }
 
 async function exportarPDF() {
+  if (!confirm("¿Exportar los datos a PDF?")) return;
 
-    if (!confirm("¿Exportar los datos a PDF?")) return;
+  // Mostrar toda la tabla antes de exportar
+  const dataTable = $("#tabla").DataTable();
+  dataTable.page.len(-1).draw();
 
-    // Mostrar toda la tabla antes de exportar
-    const dataTable = $('#tabla').DataTable();
-    dataTable.page.len(-1).draw();
+  const filas = document.querySelectorAll("#tabla tbody tr");
 
-    const filas = document.querySelectorAll("#tabla tbody tr");
+  if (filas.length === 0) {
+    alert("¡No hay datos para exportar!");
+    return;
+  }
 
-        if (filas.length === 0) {
-            alert("¡No hay datos para exportar!");
-            return;
-        }
+  const { jsPDF } = window.jspdf;
+  // 🔹 PDF vertical
+  const doc = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "letter",
+  });
 
-    const { jsPDF } = window.jspdf;
-        // 🔹 PDF vertical
-    const doc = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "letter"
-    });
+  // Obtener datos
+  const seccion = document.getElementById("lbAsistenciaSeccion").innerText;
+  const fecha = document.getElementById("fecha").value;
+  const presentes = document.getElementById("total").innerText;
+  const ausentes = document.getElementById("diferencia").innerText;
+  const total = document.getElementById("totalAlumnos").innerText;
 
-    // Obtener datos
-    const seccion = document.getElementById("lbAsistenciaSeccion").innerText;
-    const fecha = document.getElementById("fecha").value;
-    const presentes = document.getElementById("total").innerText;
-    const ausentes = document.getElementById("diferencia").innerText;
-    const total = document.getElementById("totalAlumnos").innerText;
-    
-    doc.setFontSize(14);
-    doc.text(`Reporte de asistencia ${seccion}`,14,15);
-    doc.setFontSize(10);
-    doc.text(`Presentes ${presentes} Ausentes ${ausentes} Total ${total} Fecha ${formatearFecha(fecha)}`, 14, 22);
+  doc.setFontSize(14);
+  doc.text(`Reporte de asistencia ${seccion}`, 14, 15);
+  doc.setFontSize(10);
+  doc.text(
+    `Presentes ${presentes} Ausentes ${ausentes} Total ${total} Fecha ${formatearFecha(fecha)}`,
+    14,
+    22,
+  );
 
-        // =========================================================
-    // 🔹 CLONAR TABLA
-    // =========================================================
+  // =========================================================
+  // 🔹 CLONAR TABLA
+  // =========================================================
 
-    const tabla =
-        document.getElementById("tabla");
+  const tabla = document.getElementById("tabla");
 
-    const tablaClon =
-        tabla.cloneNode(true);
+  const tablaClon = tabla.cloneNode(true);
 
-    // 🔹 Necesario para leer spans
-    const contenedor = document.createElement("div");
-    contenedor.style.position = "absolute";
-    contenedor.style.left = "-9999px";
-    contenedor.appendChild(tablaClon);
-    document.body.appendChild(contenedor);
+  // 🔹 Necesario para leer spans
+  const contenedor = document.createElement("div");
+  contenedor.style.position = "absolute";
+  contenedor.style.left = "-9999px";
+  contenedor.appendChild(tablaClon);
+  document.body.appendChild(contenedor);
 
-    // =========================================================
-    // 🔹 GENERAR TABLA PDF
-    // =========================================================
+  // =========================================================
+  // 🔹 GENERAR TABLA PDF
+  // =========================================================
 
-    doc.autoTable({
-        html: tablaClon,
-        startY: 30,
-        theme: "grid",
+  doc.autoTable({
+    html: tablaClon,
+    startY: 30,
+    theme: "grid",
 
-        styles: {
-            fontSize: 7,
-            cellPadding: 2,
-            overflow: "linebreak",
-            halign: "center",
-            valign: "middle"
-        },
+    styles: {
+      fontSize: 7,
+      cellPadding: 2,
+      overflow: "linebreak",
+      halign: "center",
+      valign: "middle",
+    },
 
-        // 🔹 Header azul
-        headStyles: {
-            fillColor: [13, 110, 253],
-            textColor: [255, 255, 255],
-            fontStyle: "bold"
-        },
+    // 🔹 Header azul
+    headStyles: {
+      fillColor: [13, 110, 253],
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+    },
 
-        // 🔹 Filas alternas
-        alternateRowStyles: {
-            fillColor: [248, 249, 250]
-        },
+    // 🔹 Filas alternas
+    alternateRowStyles: {
+      fillColor: [248, 249, 250],
+    },
 
-        // =====================================================
-        // 🔹 CONVERTIR BADGES A TEXTO
-        // =====================================================
+    // =====================================================
+    // 🔹 CONVERTIR BADGES A TEXTO
+    // =====================================================
 
-        didParseCell: function (data) {
+    didParseCell: function (data) {
+      // Solo body
+      if (data.section !== "body") return;
+      const td = data.cell.raw;
+      if (!td) return;
 
-            // Solo body
-            if (data.section !== "body") return;
-            const td = data.cell.raw;
-            if (!td) return;
+      const badges = td.querySelectorAll("span");
 
-            const badges = td.querySelectorAll("span");
+      if (badges.length === 0) return;
 
-            if (badges.length === 0) return;
+      // 🔹 Obtener valores
+      const entrada = badges[0]?.innerText?.trim() || "";
+      const salida = badges[1]?.innerText?.trim() || "";
+      const entrada2 = badges[2]?.innerText?.trim() || "";
+      const salida2 = badges[3]?.innerText?.trim() || "";
 
-            // 🔹 Obtener valores
-            const entrada = badges[0]?.innerText?.trim() || "";
-            const salida = badges[1]?.innerText?.trim() || "";
-            const entrada2 = badges[2]?.innerText?.trim() || "";
-            const salida2 = badges[3]?.innerText?.trim() || "";
+      // 🔹 Construir texto
+      let texto = "";
 
-            // 🔹 Construir texto
-            let texto = "";
+      if (entrada) texto += entrada;
 
-            if (entrada)
-                texto += entrada;
+      if (salida) texto += ` | ${salida}`;
 
-            if (salida)
-                texto += ` | ${salida}`;
+      if (entrada2) texto += ` | ${entrada2}`;
 
-            if (entrada2)
-                texto += ` | ${entrada2}`;
+      if (salida2) texto += ` | ${salida2}`;
 
-            if (salida2)
-                texto += ` | ${salida2}`;
+      // 🔹 Reemplazar contenido
+      data.cell.text = [texto];
 
-            // 🔹 Reemplazar contenido
-            data.cell.text = [texto];
+      // 🔹 Estilo texto
+      data.cell.styles.fontStyle = "bold";
 
-            // 🔹 Estilo texto
-            data.cell.styles.fontStyle =
-                "bold";
+      data.cell.styles.textColor = [33, 37, 41];
+    },
+  });
 
-            data.cell.styles.textColor = [33, 37, 41];
-        }
-    });
+  // =========================================================
+  // 🔹 LIMPIAR DOM
+  // =========================================================
 
-    // =========================================================
-    // 🔹 LIMPIAR DOM
-    // =========================================================
+  document.body.removeChild(contenedor);
 
-    document.body.removeChild(contenedor);
+  // =========================================================
+  // 🔹 EXPORTAR
+  // =========================================================
 
-    // =========================================================
-    // 🔹 EXPORTAR
-    // =========================================================
-
-    doc.save(
-        "SEAD_Reporte_asistencia.pdf"
-    );
+  doc.save("SEAD_Reporte_asistencia.pdf");
 }
 
-async function cambiarContra(){
-    if (!confirm("¿Quieres solicitar cambiar tu contraseña?")) return;
-    window.location.href = "../update-password.html";
+async function cambiarContra() {
+  if (!confirm("¿Quieres solicitar cambiar tu contraseña?")) return;
+  window.location.href = "../update-password.html";
 }
 
 function cerrarSesion() {
-    if (!confirm("¿Cerrar sesión?")) return;
+  if (!confirm("¿Cerrar sesión?")) return;
 
-    localStorage.removeItem("token");
-    window.location.href = "../index.html";
+  localStorage.removeItem("token");
+  window.location.href = "../index.html";
 }
 
 // Ejecutar cuando cargue la página
 document.addEventListener("DOMContentLoaded", () => {
-    cargarTotalInstitucion();
-    cargarSecciones();
-    renderGrafico(0, 0);
+  cargarTotalInstitucion();
+  cargarSecciones();
+  renderGrafico(0, 0);
 });

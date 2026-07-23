@@ -1,34 +1,40 @@
 // Obtener token
 const token = localStorage.getItem("token");
 
-if (token == null){
-    alert("Por favor, inicia sesión.");
-    window.location.href = "../index.html";
+if (token == null) {
+  alert("Por favor, inicia sesión.");
+  window.location.href = "../index.html";
 }
 
 // Decodificar usuario
-const payload = JSON.parse(atob(token.split('.')[1]));
+const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+
+const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+
+const payload = JSON.parse(new TextDecoder("utf-8").decode(bytes));
 
 // Mostrar datos
-document.getElementById("nombreInstitucion").innerText = payload.institutionName;
-document.getElementById("nombreUsuario").innerText = "Bienvenid@ " + payload.name;
+document.getElementById("nombreInstitucion").innerText =
+  payload.institutionName;
+document.getElementById("nombreUsuario").innerText =
+  "Bienvenid@ " + payload.name;
 document.getElementById("rolUsuario").innerText = payload.role;
 
 if (payload.institutionLogo != "") {
-    document.getElementById("logoInstitucion").src = payload.institutionLogo;
+  document.getElementById("logoInstitucion").src = payload.institutionLogo;
 }
 
 // Cargar alumnos
 async function cargarAlumnos() {
-    try {
-        mostrarLoading();
-        const data = await apiFetch("encargado/mis-alumnos");
-        const tabla = document.getElementById("tablaAlumnos");
+  try {
+    mostrarLoading();
+    const data = await apiFetch("encargado/mis-alumnos");
+    const tabla = document.getElementById("tablaAlumnos");
 
-        tabla.innerHTML = "";
+    tabla.innerHTML = "";
 
-        data.forEach(a => {
-            tabla.innerHTML += `
+    data.forEach((a) => {
+      tabla.innerHTML += `
                 <tr>
                     <td>${a.nieID}</td>
                     <td>${a.nombre}</td>
@@ -49,128 +55,123 @@ async function cargarAlumnos() {
                     </td>
                 </tr>
             `;
-        });
+    });
+  } catch (error) {
+    alert(error.message);
 
-    } catch (error) {
-        alert(error.message);
-
-        if (error.status === 401) {
-            localStorage.removeItem("token");
-            window.location.href = "../index.html";
-            return;
-        }
-
-    } finally {
-        ocultarLoading();
+    if (error.status === 401) {
+      localStorage.removeItem("token");
+      window.location.href = "../index.html";
+      return;
     }
+  } finally {
+    ocultarLoading();
+  }
 }
 
 // Agregar NIE
 async function agregarNie() {
-    const nie = document.getElementById("inputNie").value;
+  const nie = document.getElementById("inputNie").value;
 
-    if (!nie) {
-        alert("Por favor ingrese un NIE");
-        return;
+  if (!nie) {
+    alert("Por favor ingrese un NIE");
+    return;
+  }
+
+  if (nie.length > 9) {
+    alert("El NIE no puede tener más de 9 caracteres");
+    return;
+  }
+
+  try {
+    mostrarLoading();
+
+    await apiFetch("encargado/agregar-nie", {
+      method: "POST",
+      body: JSON.stringify({ nieID: nie }),
+    });
+
+    cargarAlumnos();
+    document.getElementById("inputNie").value = "";
+
+    alert("NIE agregado");
+  } catch (error) {
+    alert(error.message);
+
+    if (error.status === 401) {
+      localStorage.removeItem("token");
+      window.location.href = "../index.html";
+      return;
     }
-
-    if (nie.length > 9) {
-        alert("El NIE no puede tener más de 9 caracteres");
-        return;
-    }
-
-    try {
-        mostrarLoading();
-
-        await apiFetch("encargado/agregar-nie", {
-            method: "POST",
-            body: JSON.stringify({ nieID: nie })
-        });
-
-        cargarAlumnos();
-        document.getElementById("inputNie").value = "";
-
-        alert("NIE agregado");
-
-    } catch (error) {
-        alert(error.message);
-
-        if (error.status === 401) {
-            localStorage.removeItem("token");
-            window.location.href = "../index.html";
-            return;
-        }
-
-    } finally {
-        ocultarLoading();
-    }
+  } finally {
+    ocultarLoading();
+  }
 }
 
 // Navegación
 function volver() {
-    window.location.href = "../index.html";
+  window.location.href = "../index.html";
 }
 
 function irAsistencia(alumno) {
-    if (!alumno) {
-        alert("Seleccione un alumno primero");
-        return;
-    }
+  if (!alumno) {
+    alert("Seleccione un alumno primero");
+    return;
+  }
 
-    // Guardar en localStorage
-    localStorage.setItem("alumnoSeleccionado", JSON.stringify(alumno));
+  // Guardar en localStorage
+  localStorage.setItem("alumnoSeleccionado", JSON.stringify(alumno));
 
-    window.location.href = "verAsistencia.html";
+  window.location.href = "verAsistencia.html";
 }
 
 async function eliminarNIE(alumno) {
-    if (!alumno) {
-        alert("Seleccione un alumno primero");
-        return;
+  if (!alumno) {
+    alert("Seleccione un alumno primero");
+    return;
+  }
+
+  const confirmacion = confirm(`¿Eliminar NIE de ${alumno.nombre}?`);
+
+  if (!confirmacion) return;
+
+  try {
+    mostrarLoading();
+    await apiFetch("encargado/eliminar-nie", {
+      method: "POST",
+      body: JSON.stringify({
+        id: alumno.id,
+        nieID: alumno.nieID,
+      }),
+    });
+
+    // Volver a cargar datos
+    location.reload();
+  } catch (error) {
+    alert(error.message);
+
+    if (error.status === 401) {
+      localStorage.removeItem("token");
+      window.location.href = "../index.html";
+      return;
     }
-
-    const confirmacion = confirm(`¿Eliminar NIE de ${alumno.nombre}?`);
-
-    if (!confirmacion) return;
-
-    try {
-        mostrarLoading();
-        await apiFetch("encargado/eliminar-nie", {
-            method: "POST",
-            body: JSON.stringify({
-                id: alumno.id,
-                nieID: alumno.nieID
-            })
-        });
-
-        // Volver a cargar datos
-        location.reload();
-
-    } catch (error) {
-        alert(error.message);
-
-        if (error.status === 401) {
-            localStorage.removeItem("token");
-            window.location.href = "../index.html";
-            return;
-        }
-    } finally {
-        ocultarLoading();
-    }
+  } finally {
+    ocultarLoading();
+  }
 }
 
-async function cambiarContra(){
-    if (!confirm("¿Quieres solicitar cambiar tu contraseña?")) return;
-    window.location.href = "../update-password.html";
+async function cambiarContra() {
+  if (!confirm("¿Quieres solicitar cambiar tu contraseña?")) return;
+  window.location.href = "../update-password.html";
 }
 
 // Logout
 function logout() {
-    localStorage.removeItem("token");
-    window.location.href = "../index.html";
+  localStorage.removeItem("token");
+  window.location.href = "../index.html";
 }
 
 // Ejecutar cuando cargue la página
 document.addEventListener("DOMContentLoaded", () => {
-    cargarAlumnos();
+  cargarAlumnos();
 });
