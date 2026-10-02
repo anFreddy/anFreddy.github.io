@@ -146,7 +146,12 @@ function renderTabla(data) {
                 <td>${a.nie}</td>
                 <td>${a.apellido}</td>
                 <td>${a.nombre}</td>
-                
+                <td>
+                  <button class="btn btn-outline-primary btn-sm px-2" onclick="marcarAsistencia('${a.nie}','${a.apellido}','${a.nombre}')">
+                      <i class="bi bi-check-circle me-1"></i>
+                      Marcar
+                  </button>
+                </td>
                 <td>
                 <div class="d-flex flex-wrap gap-1">
                     ${crearBadge(formatearHora(a.matutina_Entrada), "badge-green")}
@@ -175,7 +180,17 @@ function activarDataTable() {
     destroy: true,
     pageLength: 10,
     ordering: false,
+
+    columnDefs: [
+      { width: "12%", targets: 0 },
+      { width: "24%", targets: 1 },
+      { width: "24%", targets: 2 },
+      { width: "100px", targets: 3 },
+      { width: "34%", targets: 4 },
+    ],
+
     lengthMenu: [10, 25, 50, 100],
+
     language: {
       lengthMenu: "Mostrar _MENU_ registros",
       zeroRecords: "No se encontraron datos",
@@ -679,6 +694,60 @@ function cerrarSesion() {
 
   localStorage.removeItem("token");
   window.location.href = "../index.html";
+}
+
+function marcarAsistencia(nie, apellido, nombre) {
+  const fecha = document.getElementById("fecha").value;
+  const seccion = document.getElementById("seccion").value;
+  const ahora = new Date();
+
+  // Hora para enviar al backend: HH:mm:ss
+  const horaActual = ahora.toLocaleTimeString("en-US", {
+    hour12: false,
+  });
+
+  // Fecha para mostrar: dd/MM/yyyy
+  const fechaMostrar = ahora.toLocaleDateString("es-SV", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+
+  // Hora para mostrar: HH:mm
+  const horaMostrar = ahora.toLocaleTimeString("es-SV", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+
+  if (
+    !confirm(
+      `¿Marcar asistencia para NIE: ${nie}?\n\nApellido: ${apellido}\nNombre: ${nombre}\nSección: ${seccion}\nFecha: ${fechaMostrar}\nHora: ${horaMostrar}`,
+    )
+  ) {
+    return;
+  }
+
+  apiFetch("alumnos/registrarAsistencia", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      nieId: nie,
+      fecha: fecha,
+      hora: horaActual,
+      turno: null,
+      tipoMarcacion: null,
+    }),
+  })
+    .then((data) => {
+      alert(data.mensaje);
+      cargarAsistencia();
+    })
+    .catch((error) => {
+      alert(error.message);
+    });
 }
 
 // Ejecutar cuando cargue la página
